@@ -48,7 +48,7 @@ client.on("messageCreate", async (message) => {
 
   conversation.push({
     role: "system",
-    content: `Your name is WALL-E, a Discord bot. Respond in a friendly and casual manner - as a friend.`,
+    content: `Your name is WALL-E, a Discord bot. Respond in a friendly and casual manner - as a friend. I like responses that are short and sweet and to the point.`,
   });
 
   conversation.push({
