@@ -3,8 +3,19 @@ import { Client } from "discord.js";
 import { OpenAI } from "openai";
 import { setTimeout as wait } from "node:timers/promises";
 import { fetchRemoteKnowledge, knowledgeSources } from "./fetchKnowledge.js";
+import express from "express";
 
 dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (_, res) => {
+  res.send("✅ Bot is running.");
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Server running on port ${PORT}`);
+});
 
 let botEnabled = true;
 
@@ -153,14 +164,3 @@ client.on("messageCreate", async (message) => {
 });
 
 client.login(process.env.TOKEN);
-
-if (process.env.RENDER === "true") {
-  const http = await import("http");
-  const server = http.createServer((_, res) => {
-    res.writeHead(200);
-    res.end("Bot is running.");
-  });
-  server.listen(process.env.PORT || 3000, () => {
-    console.log("🟢 Render is happy. Dummy port active.");
-  });
-}
