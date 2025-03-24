@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 import { Client } from "discord.js";
 import { OpenAI } from "openai";
+import { setTimeout as wait } from "node:timers/promises";
+import { readFileSync } from "fs";
+
 dotenv.config();
 
 const client = new Client({
@@ -30,14 +33,36 @@ client.on("messageCreate", async (message) => {
   await message.channel.sendTyping();
 
   const sendTypingInterval = setInterval(() => {
-    message.channel.sendTyping();
-  }, 5000);
+    if (message.channel) message.channel.sendTyping().catch(() => {});
+  }, 9000); // 9s delay
 
   let conversation = [];
+  const infoFromFile = readFileSync("./info.txt", "utf8");
+
+  const companyData = JSON.parse(readFileSync("./info.json", "utf8"));
+  const formattedCompanyInfo = `
+    Company: ${companyData.company}
+    Founder: ${companyData.founder}
+    Founded: ${companyData.founded}
+    Mission: ${companyData.mission}
+    Core Values: ${companyData.values.join(", ")}
+    Contact Email: ${companyData.contact.email}
+    Location: ${companyData.contact.location}
+  `;
 
   conversation.push({
     role: "system",
-    content: "Chat GPT is a friendly chatbot.",
+    content: `Your name is WALL-E, a Discord bot. Respond in a friendly and casual manner - as a friend.`,
+  });
+
+  conversation.push({
+    role: "user",
+    content: `Here is some important information:\n${infoFromFile}`,
+  });
+
+  conversation.push({
+    role: "user",
+    content: `Here is internal company info you always know:\n${formattedCompanyInfo}`,
   });
 
   let prevMessages = await message.channel.messages.fetch({ limit: 10 });
@@ -67,12 +92,34 @@ client.on("messageCreate", async (message) => {
     });
   });
 
-  const response = await openai.chat.completions
-    .create({
-      model: "gpt-3.5-turbo",
-      messages: conversation,
-    })
-    .catch((error) => console.error("OpenAI Error:\n", error));
+  async function fetchOpenAIResponse(messages) {
+    let retries = 2; // how many times to retry
+    let delay = 5000; // 5 seconds
+
+    for (let attempt = 1; attempt <= retries + 1; attempt++) {
+      try {
+        return await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages,
+        });
+      } catch (err) {
+        if (err.status === 429 && attempt <= retries) {
+          console.warn(
+            `⚠️ Rate limit hit (attempt ${attempt}). Retrying in ${
+              delay / 1000
+            }s...`
+          );
+          await wait(delay);
+          delay *= 2; // exponential backoff: 5s => 10s
+        } else {
+          console.error("OpenAI Error:\n", err);
+          return null;
+        }
+      }
+    }
+  }
+
+  const response = await fetchOpenAIResponse(conversation);
 
   clearInterval(sendTypingInterval);
 
@@ -88,8 +135,8 @@ client.on("messageCreate", async (message) => {
 
   for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
     const chunk = responseMessage.substring(i, i + chunkSizeLimit);
-
     await message.reply(chunk);
+    await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
   }
 });
 

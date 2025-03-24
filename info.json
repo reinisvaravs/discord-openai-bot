@@ -1,0 +1,11 @@
+{
+  "company": "Reinis Technologies",
+  "founder": "Reinis Vāravs",
+  "founded": 2025,
+  "mission": "To build human-centered software with speed and clarity.",
+  "values": ["Transparency", "Speed", "Clean design"],
+  "contact": {
+    "email": "hello@reinis.dev",
+    "location": "Latvia"
+  }
+}
