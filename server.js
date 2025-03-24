@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { Client } from "discord.js";
 import { OpenAI } from "openai";
 import { setTimeout as wait } from "node:timers/promises";
-import { readFileSync } from "fs";
+import { loadAllDataFromFolder } from "./loadData.js";
 
 dotenv.config();
 
@@ -37,18 +37,8 @@ client.on("messageCreate", async (message) => {
   }, 9000); // 9s delay
 
   let conversation = [];
-  const infoFromFile = readFileSync("./info.txt", "utf8");
 
-  const companyData = JSON.parse(readFileSync("./info.json", "utf8"));
-  const formattedCompanyInfo = `
-    Company: ${companyData.company}
-    Founder: ${companyData.founder}
-    Founded: ${companyData.founded}
-    Mission: ${companyData.mission}
-    Core Values: ${companyData.values.join(", ")}
-    Contact Email: ${companyData.contact.email}
-    Location: ${companyData.contact.location}
-  `;
+  const combinedInfo = loadAllDataFromFolder("./data");
 
   conversation.push({
     role: "system",
@@ -57,12 +47,7 @@ client.on("messageCreate", async (message) => {
 
   conversation.push({
     role: "user",
-    content: `Here is some important information:\n${infoFromFile}`,
-  });
-
-  conversation.push({
-    role: "user",
-    content: `Here is internal company info you always know:\n${formattedCompanyInfo}`,
+    content: `Here is internal company info you always know:\n${combinedInfo}`,
   });
 
   let prevMessages = await message.channel.messages.fetch({ limit: 10 });
