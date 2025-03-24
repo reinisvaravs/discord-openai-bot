@@ -38,7 +38,7 @@ client.on("messageCreate", async (message) => {
 
   let conversation = [];
 
-  const combinedInfo = loadAllDataFromFolder("./data");
+  const combinedInfo = await loadAllDataFromFolder("./data");
 
   conversation.push({
     role: "system",

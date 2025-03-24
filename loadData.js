@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
+import { getDocument } from "pdfjs-dist";
 
-export function loadAllDataFromFolder(folderPath) {
+export async function loadAllDataFromFolder(folderPath) {
   const files = readdirSync(folderPath);
   let output = "";
 
@@ -14,12 +15,10 @@ export function loadAllDataFromFolder(folderPath) {
       if (ext === ".txt" || ext === ".md") {
         const text = readFileSync(fullPath, "utf8");
         output += `\n[${fileName}]\n${text}\n`;
-      } 
-      else if (ext === ".json") {
+      } else if (ext === ".json") {
         const json = JSON.parse(readFileSync(fullPath, "utf8"));
         output += `\n[${fileName}]\n${formatJsonToText(json)}\n`;
-      } 
-      else if (ext === ".csv") {
+      } else if (ext === ".csv") {
         const raw = readFileSync(fullPath, "utf8");
         const lines = raw.trim().split("\n");
         const headers = lines[0].split(",");
@@ -34,6 +33,9 @@ export function loadAllDataFromFolder(folderPath) {
           const line = headers.map((h, i) => `${row[i]} (${h})`).join(", ");
           output += `- ${line}\n`;
         }
+      } else if (ext === ".pdf") {
+        const text = await extractTextFromPDF(fullPath);
+        output += `\n[${fileName}]\n${text}\n`;
       }
     } catch (err) {
       console.error(`Failed to load ${file}:`, err);
@@ -41,6 +43,21 @@ export function loadAllDataFromFolder(folderPath) {
   }
 
   return output;
+}
+
+async function extractTextFromPDF(filePath) {
+  const loadingTask = getDocument(filePath);
+  const pdf = await loadingTask.promise;
+
+  let text = "";
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const content = await page.getTextContent();
+    const strings = content.items.map((item) => item.str);
+    text += strings.join(" ") + "\n";
+  }
+
+  return text;
 }
 
 function formatJsonToText(json) {
