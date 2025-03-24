@@ -1,6 +1,10 @@
 import { readdirSync, readFileSync } from "fs";
 import path from "path";
 import { getDocument } from "pdfjs-dist";
+import mammoth from "mammoth";
+import xlsx from "xlsx";
+import * as cheerio from "cheerio";
+import yaml from "js-yaml";
 
 export async function loadAllDataFromFolder(folderPath) {
   const files = readdirSync(folderPath);
@@ -36,6 +40,36 @@ export async function loadAllDataFromFolder(folderPath) {
       } else if (ext === ".pdf") {
         const text = await extractTextFromPDF(fullPath);
         output += `\n[${fileName}]\n${text}\n`;
+      } else if (ext === ".docx") {
+        const buffer = readFileSync(fullPath);
+        const result = await mammoth.extractRawText({ buffer });
+        const cleaned = result.value.replace(/\n{3,}/g, "\n\n");
+        output += `\n[${fileName}]\n${cleaned}\n`;
+      } else if (ext === ".xlsx") {
+        const workbook = xlsx.readFile(fullPath);
+        const sheetNames = workbook.SheetNames;
+
+        for (const sheetName of sheetNames) {
+          const sheet = workbook.Sheets[sheetName];
+          const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+
+          output += `\n[${fileName} - ${sheetName}]\n`;
+
+          for (const row of data) {
+            const line = row.join(" | ");
+            output += `- ${line}\n`;
+          }
+        }
+      } else if (ext === ".html" || ext === ".htm") {
+        const html = readFileSync(fullPath, "utf8");
+        const $ = cheerio.load(html);
+        const visibleText = $("body").text().replace(/\s+/g, " ").trim();
+        output += `\n[${fileName}]\n${visibleText}\n`;
+      } else if (ext === ".yaml" || ext === ".yml") {
+        const raw = readFileSync(fullPath, "utf8");
+        const parsed = yaml.load(raw);
+        const formatted = formatJsonToText(parsed);
+        output += `\n[${fileName}]\n${formatted}\n`;
       }
     } catch (err) {
       console.error(`Failed to load ${file}:`, err);
