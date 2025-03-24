@@ -21,6 +21,14 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
 });
 
+let combinedInfoCache = await loadAllDataFromFolder("./data");
+
+// Auto-refresh information every 10 minutes
+setInterval(async () => {
+  combinedInfoCache = await loadAllDataFromFolder("./data");
+  console.log("🔄 Data cache refreshed.");
+}, 10 * 60 * 1000);
+
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   if (message.content.startsWith(IGNORE_PREFIX)) return;
@@ -38,8 +46,6 @@ client.on("messageCreate", async (message) => {
 
   let conversation = [];
 
-  const combinedInfo = await loadAllDataFromFolder("./data");
-
   conversation.push({
     role: "system",
     content: `Your name is WALL-E, a Discord bot. Respond in a friendly and casual manner - as a friend.`,
@@ -47,7 +53,7 @@ client.on("messageCreate", async (message) => {
 
   conversation.push({
     role: "user",
-    content: `Here is internal company info you always know:\n${combinedInfo}`,
+    content: `Here is internal info:\n${combinedInfoCache}`,
   });
 
   let prevMessages = await message.channel.messages.fetch({ limit: 10 });
