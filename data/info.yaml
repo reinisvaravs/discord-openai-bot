@@ -1,7 +1,0 @@
-name: WALL-E
-personality: friendly
-commands:
-  - info
-  - help
-  - restart
-status: commands not made

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { Client } from "discord.js";
 import { OpenAI } from "openai";
 import { setTimeout as wait } from "node:timers/promises";
-import { loadAllDataFromFolder } from "./loadData.js";
+import { fetchRemoteKnowledge, knowledgeSources } from "./fetchKnowledge.js";
 
 dotenv.config();
 
@@ -23,12 +23,12 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
 });
 
-let combinedInfoCache = await loadAllDataFromFolder("./data");
+let combinedInfoCache = await fetchRemoteKnowledge(knowledgeSources);
 
-// Auto-refresh information every 10 minutes
+// Auto-refresh information every 10 minutes from github "reinisvaravs/discord-bot-test-info"
 setInterval(async () => {
-  combinedInfoCache = await loadAllDataFromFolder("./data");
-  console.log("🔄 Data cache refreshed.");
+  combinedInfoCache = await fetchRemoteKnowledge(knowledgeSources);
+  console.log("🔄 Remote data refreshed from GitHub.");
 }, 10 * 60 * 1000);
 
 client.on("messageCreate", async (message) => {
