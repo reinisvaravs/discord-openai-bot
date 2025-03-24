@@ -6,6 +6,8 @@ import { loadAllDataFromFolder } from "./loadData.js";
 
 dotenv.config();
 
+let botEnabled = true;
+
 const client = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
 });
@@ -31,18 +33,43 @@ setInterval(async () => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  if (message.content.startsWith(IGNORE_PREFIX)) return;
+
   if (
     !CHANNELS.includes(message.channelId) &&
     !message.mentions.users.has(client.user.id)
   )
     return;
 
+  if (message.content === "!bot off") {
+    if (!message.member?.permissions.has("Administrator")) {
+      return message.reply("❌ You don't have permission to do that.");
+    }
+
+    botEnabled = false;
+    return message.reply("🔕 Bot has been disabled.");
+  }
+
+  if (message.content === "!bot on") {
+    if (!message.member?.permissions.has("Administrator")) {
+      return message.reply("❌ You don't have permission to do that.");
+    }
+
+    botEnabled = true;
+    return message.reply("✅ Bot has been enabled.");
+  }
+
+  if (message.content.startsWith(IGNORE_PREFIX)) return;
+
+  if (!botEnabled) return;
+
   await message.channel.sendTyping();
 
-  const sendTypingInterval = setInterval(() => {
-    if (message.channel) message.channel.sendTyping().catch(() => {});
-  }, 9000); // 9s delay
+  let sendTypingInterval;
+  if (botEnabled) {
+    sendTypingInterval = setInterval(() => {
+      if (message.channel) message.channel.sendTyping().catch(() => {});
+    }, 9000);
+  }
 
   let conversation = [];
 
@@ -56,25 +83,18 @@ client.on("messageCreate", async (message) => {
     content: `Here is internal info:\n${combinedInfoCache}`,
   });
 
-  let prevMessages = await message.channel.messages.fetch({ limit: 10 });
+  let prevMessages = await message.channel.messages.fetch({ limit: 10 }); // uses last 10 messages for context
   prevMessages.reverse();
 
   prevMessages.forEach((msg) => {
-    if (msg.author.bot && msg.author.id !== client.user.id) return;
+    if (msg.author.bot) return;
     if (msg.content.startsWith(IGNORE_PREFIX)) return;
 
     const username = msg.author.username
       .replace(/\s+/g, "_")
       .replace(/[^\w\s]/gi, "");
 
-    if (msg.author.id === client.user.id) {
-      conversation.push({
-        role: "assistant",
-        name: username,
-        content: msg.content,
-      });
-      return;
-    }
+    if (msg.author.id === client.user.id) return;
 
     conversation.push({
       role: "user",
@@ -110,6 +130,7 @@ client.on("messageCreate", async (message) => {
     }
   }
 
+  if (!botEnabled) return;
   const response = await fetchOpenAIResponse(conversation);
 
   clearInterval(sendTypingInterval);
@@ -132,3 +153,14 @@ client.on("messageCreate", async (message) => {
 });
 
 client.login(process.env.TOKEN);
+
+if (process.env.RENDER === "true") {
+  const http = await import("http");
+  const server = http.createServer((_, res) => {
+    res.writeHead(200);
+    res.end("Bot is running.");
+  });
+  server.listen(process.env.PORT || 3000, () => {
+    console.log("🟢 Render is happy. Dummy port active.");
+  });
+}
