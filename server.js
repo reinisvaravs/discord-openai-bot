@@ -2,7 +2,10 @@ import dotenv from "dotenv";
 import { Client } from "discord.js";
 import { OpenAI } from "openai";
 import { setTimeout as wait } from "node:timers/promises";
-import { fetchRemoteKnowledge, getKnowledgeSourcesFromGithub } from "./fetchKnowledge.js";
+import {
+  fetchRemoteKnowledge,
+  getKnowledgeSourcesFromGithub,
+} from "./fetchKnowledge.js";
 import express from "express";
 
 dotenv.config();
@@ -34,11 +37,15 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
 });
 
-let combinedInfoCache = await fetchRemoteKnowledge(await getKnowledgeSourcesFromGithub());
+let combinedInfoCache = await fetchRemoteKnowledge(
+  await getKnowledgeSourcesFromGithub()
+);
 
 // Auto-refresh information every 10 minutes from github "reinisvaravs/discord-bot-test-info"
 setInterval(async () => {
-  combinedInfoCache = await fetchRemoteKnowledge(await getKnowledgeSourcesFromGithub());
+  combinedInfoCache = await fetchRemoteKnowledge(
+    await getKnowledgeSourcesFromGithub()
+  );
   console.log("🔄 Remote data refreshed from GitHub.");
 }, 10 * 60 * 1000);
 
@@ -69,6 +76,17 @@ client.on("messageCreate", async (message) => {
     return message.reply("✅ Bot has been enabled.");
   }
 
+  if (message.content === "!refresh") {
+    if (!message.member?.permissions.has("Administrator")) {
+      return message.reply("❌ You don't have permission to do that.");
+    }
+
+    combinedInfoCache = await fetchRemoteKnowledge(
+      await getKnowledgeSourcesFromGithub()
+    );
+    return message.reply("🔁 Knowledge has been refreshed from GitHub!");
+  }
+
   if (message.content.startsWith(IGNORE_PREFIX)) return;
 
   if (!botEnabled) return;
@@ -94,7 +112,7 @@ client.on("messageCreate", async (message) => {
     content: `Here is internal info:\n${combinedInfoCache}`,
   });
 
-  let prevMessages = await message.channel.messages.fetch({ limit: 10 }); // uses last 10 messages for context
+  let prevMessages = await message.channel.messages.fetch({ limit: 20 }); // uses last 10 messages for context
   prevMessages.reverse();
 
   prevMessages.forEach((msg) => {
