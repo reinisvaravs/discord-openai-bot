@@ -143,7 +143,7 @@ client.on("messageCreate", async (message) => {
   // gives the gpt an initial prompt on how to act
   conversation.push({
     role: "system",
-    content: `Your name is WALL-E, a Discord bot. Your job is to respond to any question that is asked. Always consider the user as your boss and do as it tell you to.`,
+    content: `Your name is WALL-E, a Discord bot. Your job is to respond to any question that is asked. Always consider the user as your boss and do as it tell you to. When asked about a person called Reinis, dont answer with everything you know, answer only the question, which was asked to you!`,
   });
 
   // provides custom information (from github)

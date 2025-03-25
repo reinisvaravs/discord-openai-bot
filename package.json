@@ -15,7 +15,7 @@
     "multi-format"
   ],
   "author": "Reinis R. Vāravs",
-  "license": "ISC",
+  "license": "MIT",
   "description": "Discord bot called WALL-E, who is ran by OpenAI. It can be tought information by placing files into a github repo.",
   "dependencies": {
     "cheerio": "^1.0.0",
