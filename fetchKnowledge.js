@@ -1,6 +1,6 @@
 import fetch from "node-fetch"; // Used for making HTTP requests to GitHub and downloading file contents
 import mammoth from "mammoth"; // For .docx (Word) files
-import pdfjsLib from "pdfjs-dist"; // For .pdf files (pdf.js)
+import * as pdfjsLib from "pdfjs-dist"; // For .pdf files (pdf.js)
 import * as XLSX from "xlsx"; // For .xlsx (Excel) files
 
 // Maps file extensions to internal types so we know how to parse each one
