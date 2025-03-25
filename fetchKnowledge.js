@@ -3,18 +3,47 @@ import mammoth from "mammoth";
 import pdfjsLib from "pdfjs-dist";
 import * as XLSX from "xlsx";
 import { createRequire } from "module";
-const require = createRequire(import.meta.url);
 
+const require = createRequire(import.meta.url);
 pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve(
   "pdfjs-dist/build/pdf.worker.js"
 );
 
-export const knowledgeSources = [
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/reinis.docx",
-    type: "docx",
-  },
-];
+const extensionToType = {
+  txt: "text",
+  md: "text",
+  csv: "text",
+  html: "text",
+  yaml: "text",
+  json: "json",
+  docx: "docx",
+  pdf: "pdf",
+  xlsx: "xlsx",
+};
+
+// Builds knowledgeSources dynamically from GitHub rep
+export async function getKnowledgeSourcesFromGithub() {
+  const repoApiUrl = "https://api.github.com/repos/reinisvaravs/discord-bot-test-info/contents/";
+  const sources = [];
+
+  try {
+    const res = await fetch(repoApiUrl);
+    const files = await res.json();
+
+    for (const file of files) {
+      if (file.type !== "file") continue;
+      const ext = file.name.split(".").pop();
+      const type = extensionToType[ext];
+      if (!type) continue;
+
+      sources.push({ url: file.download_url, type });
+    }
+  } catch (err) {
+    console.error("❌ Failed to load file list from GitHub:", err.message);
+  }
+
+  return sources;
+}
 
 export async function fetchRemoteKnowledge(sources) {
   let output = "";
