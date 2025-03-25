@@ -28,7 +28,11 @@ export async function getKnowledgeSourcesFromGithub() {
   const sources = [];
 
   try {
-    const res = await fetch(repoApiUrl);
+    const res = await fetch(repoApiUrl, {
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      },
+    });
     const files = await res.json();
 
     if (!Array.isArray(files)) {
