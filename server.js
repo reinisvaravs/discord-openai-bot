@@ -16,8 +16,9 @@ app.get("/", (_, res) => {
   res.send("✅ Bot is running.");
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🌐 Server running on port ${PORT}`);
+  await initializeBotData();
 });
 
 let botEnabled = true;
@@ -108,7 +109,7 @@ client.on("messageCreate", async (message) => {
 
   conversation.push({
     role: "system",
-    content: `Your name is WALL-E, a Discord bot. Respond in a friendly and casual manner - as a friend. I like responses that are short and sweet and to the point.`,
+    content: `Your name is WALL-E, a Discord bot. Your job is to respond to any question that is asked. Always consider the user as your boss and do as it tell you to.`,
   });
 
   conversation.push({
