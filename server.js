@@ -37,17 +37,21 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
 });
 
-let combinedInfoCache = await fetchRemoteKnowledge(
-  await getKnowledgeSourcesFromGithub()
-);
+let combinedInfoCache = "";
 
-// Auto-refresh information every 10 minutes from github "reinisvaravs/discord-bot-test-info"
-setInterval(async () => {
+async function initializeBotData() {
   combinedInfoCache = await fetchRemoteKnowledge(
     await getKnowledgeSourcesFromGithub()
   );
-  console.log("🔄 Remote data refreshed from GitHub.");
-}, 10 * 60 * 1000);
+
+  // Refresh every 10 min
+  setInterval(async () => {
+    combinedInfoCache = await fetchRemoteKnowledge(
+      await getKnowledgeSourcesFromGithub()
+    );
+    console.log("🔄 Remote data refreshed from GitHub.");
+  }, 10 * 60 * 1000);
+}
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
