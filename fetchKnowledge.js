@@ -2,12 +2,6 @@ import fetch from "node-fetch"; // Used for making HTTP requests to GitHub and d
 import mammoth from "mammoth"; // For .docx (Word) files
 import pdfjsLib from "pdfjs-dist"; // For .pdf files (pdf.js)
 import * as XLSX from "xlsx"; // For .xlsx (Excel) files
-import { createRequire } from "module"; // PdfjsLib requires CommonJS
-
-const require = createRequire(import.meta.url);
-pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve(
-  "pdfjs-dist/build/pdf.worker.js"
-); // Sets up PDF.js worker manually
 
 // Maps file extensions to internal types so we know how to parse each one
 const extensionToType = {
@@ -103,8 +97,8 @@ export async function fetchRemoteKnowledge(sources) {
         const pdf = await pdfjsLib.getDocument({
           data: new Uint8Array(arrayBuffer),
         }).promise;
-        let textContent = "";
 
+        let textContent = "";
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();

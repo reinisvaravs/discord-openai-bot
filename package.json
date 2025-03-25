@@ -26,7 +26,7 @@
     "mammoth": "^1.9.0",
     "node-fetch": "^3.3.2",
     "openai": "^4.89.0",
-    "pdfjs-dist": "^3.7.107",
+    "pdfjs-dist": "^5.0.375",
     "xlsx": "^0.18.5"
   }
 }
