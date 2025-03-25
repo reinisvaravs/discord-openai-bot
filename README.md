@@ -5,16 +5,16 @@
 ![Bot Type](https://img.shields.io/badge/Powered_by-GPT_3.5-orange)
 ![Status](https://img.shields.io/badge/status-live-success)
 
-This is a custom-built Discord bot powered by OpenAI's GPT-3.5-Turbo. It responds to user messages using:
+This is a custom-built Discord bot powered by OpenAI's GPT-3.5-Turbo (atleast in dev). It responds to user messages using:
 
-- Dynamic knowledge loaded from files (locally or from a GitHub repo)
+- Dynamic knowledge loaded from files (from a GitHub repo)
 - Recent conversation context (in-memory message history)
 
 ---
 
 ## 🚀 Features
 
-✅ Supports multiple file formats:
+✅ Supports main file formats:
 
 - `.txt`, `.json`, `.csv`, `.md`, `.html`, `.htm`, `.yaml`, `.yml`
 - `.pdf`, `.docx`, `.xlsx`
@@ -23,6 +23,7 @@ This is a custom-built Discord bot powered by OpenAI's GPT-3.5-Turbo. It respond
 
 - Automatically fetches files from a GitHub repository
 - Refreshes knowledge every 10 minutes
+- Or refreshed when admin types `!refresh`
 
 ✅ Context memory:
 
@@ -34,7 +35,7 @@ This is a custom-built Discord bot powered by OpenAI's GPT-3.5-Turbo. It respond
 - `!bot off` / `!bot on` — disable or enable bot replies
 - `!refresh` — instantly re-fetch knowledge from GitHub
 
-✅ Deployment ready for:
+✅ Current deployment on:
 
 - Render.com (with UptimeRobot wake-up ping)
 
@@ -44,9 +45,7 @@ This is a custom-built Discord bot powered by OpenAI's GPT-3.5-Turbo. It respond
 
 ```
 📦 gpt-bot
-├── data/                  # Optional local files (if not using GitHub)
 ├── fetchKnowledge.js      # Fetch and parse knowledge files from GitHub
-├── loadData.js            # (Legacy) Previously used for local loading
 ├── server.js              # Main Discord + OpenAI bot logic
 ├── package.json           # Dependencies and scripts
 ```
@@ -119,5 +118,6 @@ npm start
 
 ## 🧠 Author
 
-**Reinis Roberts Vāravs**  
-Built from scratch with love, memory, and GPT logic.
+**Reinis Roberts Vāravs**
+
+---
