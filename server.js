@@ -108,17 +108,15 @@ client.on("messageCreate", async (message) => {
   }
 
   // Store each user message in memory for context (if not a command or bot)
-  if (!message.author.bot && !message.content.startsWith("!")) {
-    messageHistory.push({
-      role: "user",
-      content: message.content,
-      author: message.author.username,
-    });
+  messageHistory.push({
+    role: "user",
+    name: message.author.username,
+    content: message.content,
+  });
 
-    // Trim to last 100 messages
-    if (messageHistory.length > MAX_HISTORY) {
-      messageHistory.shift(); // remove oldest
-    }
+  // Keep last 100 messages
+  if (messageHistory.length > MAX_HISTORY) {
+    messageHistory.shift(); // remove oldest
   }
 
   // ignores messages starting with "!"
@@ -137,28 +135,28 @@ client.on("messageCreate", async (message) => {
     }, 9000); // every 9s will the typing show
   }
 
-  // whole conversation array which will be given to the gpt
-  let conversation = [];
-
-  // gives the gpt an initial prompt on how to act
-  conversation.push({
-    role: "system",
-    content: `Your name is WALL-E, a Discord bot. Your job is to respond to any question that is asked. Always consider the user as your boss and do as it tell you to. When asked about a person called Reinis, dont answer with everything you know, answer only the question, which was asked to you!`,
-  });
-
-  // provides custom information (from github)
-  conversation.push({
-    role: "user",
-    content: `Here is internal info:\n${combinedInfoCache}`,
-  });
-
   // gives the past conversation as context
-  conversation.push(
-    ...messageHistory.map((msg) => ({
+  const formattedHistory = messageHistory.map((msg) => ({
+    role: msg.role,
+    content: `${msg.name}: ${msg.content}`,
+  }));
+
+  // whole conversation array which will be given to the gpt
+  let conversation = [
+    {
+      role: "system",
+      content: `Your name is WALL-E, a Discord bot. Your job is to respond to any question that is asked. Always consider the user as your boss and do as it tell you to. When asked about a person called Reinis, dont answer with everything you know, answer only the question, which was asked to you! If no question is asked, its fine to talk like a friend normaly. And by the way your purpose is not only answering quesitons about Reinis. Youre a bot that talks about anything the user wants.`,
+    },
+    ...formattedHistory,
+    {
       role: "user",
-      content: `${msg.author}: ${msg.content}`,
-    }))
-  );
+      content: `${message.author.username}: ${message.content}`,
+    },
+    {
+      role: "user",
+      content: `Here is internal info:\n${combinedInfoCache}`,
+    },
+  ];
 
   // openAI response function
   async function fetchOpenAIResponse(messages) {
@@ -203,13 +201,23 @@ client.on("messageCreate", async (message) => {
     return;
   }
 
-  // if the response from OpenAI is longer than 2000 char, it divides them into 2000 char chunks
-  const responseMessage = response.choices[0].message.content;
+  let responseMessage = response.choices[0].message.content;
   const chunkSizeLimit = 2000;
+
+  if (responseMessage.startsWith("WALL-E:")) {
+    responseMessage = responseMessage.replace(/^WALL-E:\s*/, "");
+  }
+
+  // if the response from OpenAI is longer than 2000 char, it divides them into 2000 char chunks
 
   for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
     const chunk = responseMessage.substring(i, i + chunkSizeLimit);
     await message.reply(chunk);
+    messageHistory.push({
+      role: "assistant",
+      name: "WALL-E",
+      content: chunk,
+    });
     await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
   }
 });
