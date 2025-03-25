@@ -23,12 +23,17 @@ const extensionToType = {
 
 // Builds knowledgeSources dynamically from GitHub rep
 export async function getKnowledgeSourcesFromGithub() {
-  const repoApiUrl = "https://api.github.com/repos/reinisvaravs/discord-bot-test-info/contents/";
+  const repoApiUrl =
+    "https://api.github.com/repos/reinisvaravs/discord-bot-test-info/contents/";
   const sources = [];
 
   try {
     const res = await fetch(repoApiUrl);
     const files = await res.json();
+
+    if (!Array.isArray(files)) {
+      throw new Error(files.message || "GitHub API did not return a file list");
+    }
 
     for (const file of files) {
       if (file.type !== "file") continue;
