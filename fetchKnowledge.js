@@ -11,40 +11,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve(
 
 export const knowledgeSources = [
   {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.txt",
-    type: "text",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.md",
-    type: "text",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.json",
-    type: "json",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.csv",
-    type: "text",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.html",
-    type: "text",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.yaml",
-    type: "text",
-  },
-  {
     url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.docx",
     type: "docx",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.pdf",
-    type: "pdf",
-  },
-  {
-    url: "https://raw.githubusercontent.com/reinisvaravs/discord-bot-test-info/main/info.xlsx",
-    type: "xlsx",
   },
 ];
 
