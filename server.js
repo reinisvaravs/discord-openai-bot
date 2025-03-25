@@ -28,7 +28,7 @@ client.on("ready", () => {
 });
 
 const IGNORE_PREFIX = "!";
-const CHANNELS = ["1353724696214110280"];
+const CHANNELS = ["1354077197673168928"];
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
