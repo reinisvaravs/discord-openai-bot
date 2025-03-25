@@ -10,14 +10,13 @@
   "keywords": [
     "discord-bot",
     "openai",
-    "gpt-3.5-turbo",
     "ai-bot",
     "file-reader",
     "multi-format"
   ],
   "author": "Reinis R. Vāravs",
   "license": "ISC",
-  "description": "Discord bot called WALL-E, who is ran by OpenAI gpt-3.5-turbo. It can be tought information by giving it these types of files - .csv, .docx, .html, .htm, .json, .md, .pdf, .txt, .xlsx, .yaml, .yml - which must be placed in the github repo.",
+  "description": "Discord bot called WALL-E, who is ran by OpenAI. It can be tought information by placing files into a github repo.",
   "dependencies": {
     "cheerio": "^1.0.0",
     "discord.js": "^14.18.0",

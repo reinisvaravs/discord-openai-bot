@@ -1,63 +1,74 @@
-import fetch from "node-fetch";
-import mammoth from "mammoth";
-import pdfjsLib from "pdfjs-dist";
-import * as XLSX from "xlsx";
-import { createRequire } from "module";
+import fetch from "node-fetch"; // Used for making HTTP requests to GitHub and downloading file contents
+import mammoth from "mammoth"; // For .docx (Word) files
+import pdfjsLib from "pdfjs-dist"; // For .pdf files (pdf.js)
+import * as XLSX from "xlsx"; // For .xlsx (Excel) files
+import { createRequire } from "module"; // PdfjsLib requires CommonJS
 
 const require = createRequire(import.meta.url);
 pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve(
   "pdfjs-dist/build/pdf.worker.js"
-);
+); // Sets up PDF.js worker manually
 
+// Maps file extensions to internal types so we know how to parse each one
 const extensionToType = {
   txt: "text",
   md: "text",
   csv: "text",
   html: "text",
+  htm: "text",
   yaml: "text",
+  yml: "text",
   json: "json",
   docx: "docx",
   pdf: "pdf",
   xlsx: "xlsx",
 };
 
-// Builds knowledgeSources dynamically from GitHub rep
+// Loads the list of files in the GitHub repo and maps them into a standardized array
+// Each file must have a supported extension from extensionToType
+// returns: { url, type, name }[] — all files from github folder
 export async function getKnowledgeSourcesFromGithub() {
+  // github api which reads all file names in the folder
   const repoApiUrl =
     "https://api.github.com/repos/reinisvaravs/discord-bot-test-info/contents/";
-  const sources = [];
 
   try {
     const res = await fetch(repoApiUrl, {
       headers: {
         Authorization: `token ${process.env.GITHUB_TOKEN}`,
-      },
+      }, // use a token to increase GitHub API request limit
     });
     const files = await res.json();
 
+    // array = error
     if (!Array.isArray(files)) {
       throw new Error(files.message || "GitHub API did not return a file list");
     }
 
-    for (const file of files) {
-      if (file.type !== "file") continue;
-      const ext = file.name.split(".").pop();
-      const type = extensionToType[ext];
-      if (!type) continue;
-
-      sources.push({ url: file.download_url, type });
-    }
+    return files
+      .filter((file) => file.type === "file") // only process files
+      .map((file) => {
+        const ext = file.name.split(".").pop();
+        const type = extensionToType[ext]; // map ext to internal parser type
+        if (!type) return null;
+        return {
+          url: file.download_url,
+          type,
+          name: file.name,
+        };
+      })
+      .filter(Boolean); // remove null entries (unsupported types)
   } catch (err) {
     console.error("❌ Failed to load file list from GitHub:", err.message);
   }
-
-  return sources;
 }
 
+// Downloads and parses files based on their type
+// Returns one large combined string
 export async function fetchRemoteKnowledge(sources) {
-  let output = "";
+  const allTextChunks = [];
 
-  for (const { url, type } of sources) {
+  for (const { url, type, name } of sources) {
     try {
       const res = await fetch(url);
       if (!res.ok) {
@@ -65,23 +76,29 @@ export async function fetchRemoteKnowledge(sources) {
         continue;
       }
 
+      // json file
       if (type === "json") {
         const data = await res.json();
-        output += `\n[${url.split("/").pop()}]\n${JSON.stringify(
-          data,
-          null,
-          2
-        )}\n`;
-      } else if (type === "text") {
+        allTextChunks.push(`\n[${name}]\n${JSON.stringify(data, null, 2)}\n`);
+      }
+
+      // txt, md, html, htm, yaml, yml, csv
+      else if (type === "text") {
         const text = await res.text();
-        output += `\n[${url.split("/").pop()}]\n${text}\n`;
-      } else if (type === "docx") {
+        allTextChunks.push(`\n[${name}]\n${text}\n`);
+      }
+
+      // docx file
+      else if (type === "docx") {
         const arrayBuffer = await res.arrayBuffer();
         const { value } = await mammoth.extractRawText({
           buffer: Buffer.from(arrayBuffer),
         });
-        output += `\n[${url.split("/").pop()}]\n${value}\n`;
-      } else if (type === "pdf") {
+        allTextChunks.push(`\n[${name}]\n${value}\n`);
+      }
+
+      // pdf file
+      else if (type === "pdf") {
         const arrayBuffer = await res.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({
           data: new Uint8Array(arrayBuffer),
@@ -95,8 +112,11 @@ export async function fetchRemoteKnowledge(sources) {
           textContent += pageText + "\n";
         }
 
-        output += `\n[${url.split("/").pop()}]\n${textContent}\n`;
-      } else if (type === "xlsx") {
+        allTextChunks.push(`\n[${name}]\n${textContent}\n`);
+      }
+
+      // xlsx file
+      else if (type === "xlsx") {
         const arrayBuffer = await res.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: "buffer" });
         let sheetText = "";
@@ -110,12 +130,13 @@ export async function fetchRemoteKnowledge(sources) {
           });
         });
 
-        output += `\n[${url.split("/").pop()}]\n${sheetText}\n`;
+        allTextChunks.push(`\n[${name}]\n${sheetText}\n`);
       }
     } catch (err) {
       console.error(`🔥 Error fetching/parsing ${url}:`, err.message);
     }
   }
 
-  return output;
+  // Return one large combined string with all parsed content
+  return allTextChunks.join("\n\n");
 }
