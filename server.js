@@ -145,16 +145,16 @@ client.on("messageCreate", async (message) => {
   let conversation = [
     {
       role: "system",
-      content: `You're WALL-E, a helpful Discord bot created by Reinis. You can talk about many topics, not just Reinis. When asked about Reinis, answer only the specific question asked — do not give a full biography unless the user explicitly requests it (e.g. "Tell me everything about Reinis"). Keep your answers short and to-the-point unless the user asks for a detailed explanation. Respond casually and naturally.`,
+      content: `
+        You're WALL-E, a helpful Discord bot created by Reinis. You can talk about many topics, not just Reinis. When asked about Reinis, answer only the specific question asked — do not give a full biography unless the user explicitly requests it (e.g. "Tell me everything about Reinis"). Keep your answers short and to-the-point unless the user asks for a detailed explanation. Respond casually and naturally.
+        
+        You also have access to the following internal background knowledge (from files Reinis uploaded): ${combinedInfoCache} You can talk about many topics, not just Reinis. When asked about Reinis, answer only the specific question asked — do not give a full biography unless explicitly requested. Keep your answers short and to-the-point unless the user asks for a detailed explanation. Never say that someone "provided this info" — just use it as memory.
+      `,
     },
     ...formattedHistory,
     {
       role: "user",
       content: `${message.author.username}: ${message.content}`,
-    },
-    {
-      role: "user",
-      content: `Here is internal info:\n${combinedInfoCache}`,
     },
   ];
 
