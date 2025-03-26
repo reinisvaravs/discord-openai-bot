@@ -20,11 +20,6 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.listen(PORT, async () => {
-  console.log(`[port: ${PORT}]`);
-  await initializeBotData();
-});
-
 // Tracks whether the bot should respond or not
 let botEnabled = true;
 
@@ -85,6 +80,11 @@ async function initializeBotData() {
     console.log("🔄 Remote data refreshed from GitHub.");
   }, 10 * 60 * 1000);
 }
+
+app.listen(PORT, async () => {
+  console.log(`[port: ${PORT}]`);
+  await initializeBotData();
+});
 
 // Store last 100 user messages in memory to give context to GPT
 let messageHistory = [];
