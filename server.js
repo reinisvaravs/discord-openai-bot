@@ -145,6 +145,21 @@ client.on("messageCreate", async (message) => {
       return message.reply("❌ Please provide a valid channel ID.");
     }
 
+    // Try to fetch the channel first
+    let tempChannel;
+    try {
+      tempChannel = await client.channels.fetch(newChannelId);
+    } catch (err) {
+      return message.reply(
+        "❌ Invalid channel ID or I can't access that channel."
+      );
+    }
+
+    // Check if it's a valid text-based channel
+    if (!tempChannel?.isTextBased()) {
+      return message.reply("❌ That channel is not a text channel.");
+    }
+
     try {
       await pool.query(
         `UPDATE bot_config SET value = $1 WHERE key = '${mode}_channel_id'`,
