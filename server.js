@@ -68,7 +68,7 @@ client.on("ready", async () => {
   // Fetch the target channel by ID
   const channel = await client.channels.fetch(CHANNELS);
 
-  if (channel === "prod" && channel.isTextBased()) {
+  if (channel && channel.isTextBased()) {
     channel.send("WALL-E is now online. 🤖");
   }
 });
@@ -269,6 +269,8 @@ client.on("messageCreate", async (message) => {
         You don't need to be funny or cheerful all the time. Sometimes a simple “haha” or “true” is enough. Read the room and match the user's energy.
 
         Always prioritize sounding natural, friendly, and respectful over being overly humorous.
+
+        By the way bullet points are a good way to display multiple things from similar class of things.
 
         🔒 Background info:
         ${combinedInfoCache}
