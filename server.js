@@ -10,13 +10,17 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import pool, { getChannelId } from "./db.js";
+import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
+app.use(cors({ origin: "*" })); // if you want to allow everything during testing
 const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -55,7 +59,7 @@ client.on("ready", async () => {
   // Fetch the target channel by ID
   const channel = await client.channels.fetch(CHANNELS);
 
-  if (channel && channel.isTextBased()) {
+  if (channel === "prod" && channel.isTextBased()) {
     channel.send("WALL-E is now online. 🤖");
   }
 });
@@ -335,3 +339,25 @@ client.on("messageCreate", async (message) => {
 });
 
 client.login(process.env.TOKEN);
+
+app.post("/send-remote", express.json(), async (req, res) => {
+  console.log("✅ /send-remote triggered");
+  const { message, channelId } = req.body;
+
+  if (!message || !channelId) {
+    return res.status(400).send("❌ Missing message or channelId.");
+  }
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (!channel || !channel.isTextBased()) {
+      return res.status(400).send("❌ Invalid channel");
+    }
+
+    await channel.send(`[remote]\n**${message}**`);
+    res.send("✅ Message sent");
+  } catch (err) {
+    console.error("❌ Failed to send:", err);
+    res.status(500).send("❌ Server error");
+  }
+});

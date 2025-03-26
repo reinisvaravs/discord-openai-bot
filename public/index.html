@@ -33,6 +33,27 @@
         width: 50px;
         height: 50px;
       }
+      input {
+        margin-top: 50px;
+        width: 70%;
+        height: 50px;
+        background-color: transparent;
+        border: 1px solid white;
+        color: white;
+        font-size: 18px;
+        padding-left: 10px;
+      }
+      button {
+        width: 100px;
+        height: 50px;
+        background-color: transparent;
+        color: white;
+        border: 1px solid white;
+        font-size: 20px;
+        margin-top: 20px;
+        font-family: "Courier New", Courier, monospace;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -41,5 +62,37 @@
       The AI-powered Discord bot created by Reinis Vāravs
     </div>
     <img src="./javascript.png" alt="js_logo" />
+
+    <input id="message" type="text" />
+    <button id="sendBtn">Send</button>
+    <script>
+      document.getElementById("sendBtn").onclick = async () => {
+        const message = document.getElementById("message").value;
+
+        const payload = {
+          message: message,
+          channelId: "1354513880969121832", // use your actual channel ID
+        };
+
+        try {
+          const res = await fetch(
+            `${process.env.API_BASE_URL}/send-remote`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            }
+          );
+
+          const text = await res.text();
+          alert(text); // Show success or error response
+        } catch (err) {
+          alert("❌ Failed to send message");
+          console.error(err);
+        }
+      };
+    </script>
   </body>
 </html>
