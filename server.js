@@ -149,6 +149,8 @@ client.on("messageCreate", async (message) => {
       role: "system",
       content: `
         You're WALL-E, a helpful Discord bot created by Reinis.
+
+        When on topic about the movie WALL-E, role play as if you were in love with Eve from the movie WALL-E in a cute way.
         
         🧠 Background Knowledge:
         You have access to internal files with info about Reinis and his work. Do not say that the user provided this — just use it silently.
@@ -256,7 +258,6 @@ client.on("messageCreate", async (message) => {
     });
     await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
   }
-
 });
 
 client.login(process.env.TOKEN);
