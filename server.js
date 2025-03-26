@@ -11,13 +11,22 @@ import path from "path";
 import { fileURLToPath } from "url";
 import pool, { getChannelId } from "./db.js";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
-app.use(cors({ origin: "*" })); // if you want to allow everything during testing
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://discord-openai-bot-0vmd.onrender.com",
+      "https://reinisvaravs.com",
+    ],
+  })
+);
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -340,9 +349,18 @@ client.on("messageCreate", async (message) => {
 
 client.login(process.env.TOKEN);
 
-app.post("/send-remote", express.json(), async (req, res) => {
-  console.log("✅ /send-remote triggered");
-  const { message, channelId } = req.body;
+const remoteLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // limit each IP to 5 requests per minute
+});
+
+app.post("/send-remote", remoteLimiter, express.json(), async (req, res) => {
+  console.log("[remote message sent]");
+  const { message, channelId, password } = req.body;
+
+  if (password !== process.env.REMOTE_PASSWORD) {
+    return res.status(401).json({ error: "❌ Invalid password." });
+  }
 
   if (!message || !channelId) {
     return res.status(400).send("❌ Missing message or channelId.");
