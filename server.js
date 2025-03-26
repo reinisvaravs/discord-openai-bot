@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`[server port: ${PORT}]`);
   await initializeBotData();
 });
 
@@ -32,15 +32,34 @@ const client = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
 });
 
-// Logs this when the bot is actually ready
-client.on("ready", () => {
-  console.log("🤖🤖🤖 The bot is online");
-});
-
 // Wont respond to messages that start with "!" mark, except for admin commands
 const IGNORE_PREFIX = "!";
-// Talks only in the channel called "bot"
-const CHANNELS = ["1354436933278761083"];
+
+let CHANNELS = [];
+
+console.log(""); // space in terminal
+console.log(""); // space in terminal
+console.log(""); // space in terminal
+
+if (process.env.RENDER) {
+  CHANNELS = ["1354436933278761083"]; // bot channel prod
+  console.log("[production]");
+} else {
+  CHANNELS = ["1354472784796844204"]; // bot-dev channel
+  console.log("[development]");
+}
+
+// Logs this when the bot is actually ready
+client.on("ready", async () => {
+  console.log("✅WALL-E is online");
+  
+  // Fetch the target channel by ID
+  const channel = await client.channels.fetch(CHANNELS[0]);
+
+  if (channel && channel.isTextBased()) {
+    channel.send("WALL-E is now online. 🤖");
+  }
+});
 
 // OpenAI secret key
 const openai = new OpenAI({
