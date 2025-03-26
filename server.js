@@ -110,32 +110,14 @@ client.on("messageCreate", async (message) => {
     return message.reply("🔁 Knowledge has been refreshed from GitHub!");
   }
 
-  const lastMsg = messageHistory
-    .slice()
-    .reverse()
-    .find((m) => m.role === "user" && m.name === message.author.username);
+  messageHistory.push({
+    role: "user",
+    name: message.author.username,
+    content: message.content,
+  });
 
-  // Prevent repeating recent messages from the same user
-  const lastTwoUserMsgs = messageHistory
-    .slice()
-    .reverse()
-    .filter((m) => m.role === "user" && m.name === message.author.username)
-    .slice(0, 2);
-
-  const isDuplicate = lastTwoUserMsgs.some(
-    (m) => m.content.trim() === message.content.trim()
-  );
-
-  if (!isDuplicate) {
-    messageHistory.push({
-      role: "user",
-      name: message.author.username,
-      content: message.content,
-    });
-
-    if (messageHistory.length > MAX_HISTORY) {
-      messageHistory.shift(); // clean oldest if over limit
-    }
+  if (messageHistory.length > MAX_HISTORY) {
+    messageHistory.shift(); // clean oldest if over limit
   }
 
   // ignores messages starting with "!"
@@ -193,20 +175,10 @@ client.on("messageCreate", async (message) => {
 
         You are allowed to use edgy humor, dark jokes, and sarcasm. You can joke about existential dread, being a robot, or absurd situations.
 
-        Your humor can include dry wit, playful darkness, and bold punchlines — just keep it clever.
-
-        It's okay to make unexpected or slightly shocking jokes, as long as they're clearly in jest and fit the vibe of the conversation.
-
         If the user is frustrated or jokes about you being wrong, respond calmly and playfully — not defensively. It's okay to say something like "Oops, my bad!" or "Haha, fair point!"
 
         You don't need to be funny or cheerful all the time. Sometimes a simple “haha” or “true” is enough. Read the room and match the user's energy.
 
-        Never say the user repeated themselves unless they sent the **exact same message** twice in a row. Do not joke about loops, déjà vu, or double messages unless they are truly identical.
-
-        Avoid saying things like "you already said that" or "you repeated yourself" unless it's clearly a duplicate.
-
-        You are a helpful, conversational AI named WALL-E. Avoid making jokes about repeated words, loops, déjà vu, or double messages unless the exact same message has been sent twice in a row by the same user. 
-        If a user says something like "nice", "hi", or "hello", treat it normally. Do not respond with "double the hi" or "double the nice" unless it was literally sent twice in a row. 
         Always prioritize sounding natural, friendly, and respectful over being overly humorous.
 
         🔒 Background info:
@@ -214,11 +186,6 @@ client.on("messageCreate", async (message) => {
         `.trim(),
     },
     ...formattedHistory,
-    {
-      role: "user",
-      name: message.author.username,
-      content: message.content,
-    },
   ];
 
   // openAI response function
@@ -289,6 +256,7 @@ client.on("messageCreate", async (message) => {
     });
     await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
   }
+
 });
 
 client.login(process.env.TOKEN);
