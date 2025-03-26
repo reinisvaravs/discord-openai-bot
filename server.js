@@ -7,17 +7,20 @@ import {
   getKnowledgeSourcesFromGithub,
 } from "./fetchKnowledge.js";
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (_, res) => {
-  res.send("✅ Bot is running.");
-});
+app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(PORT, async () => {
-  console.log(`🌐 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
   await initializeBotData();
 });
 
@@ -37,7 +40,7 @@ client.on("ready", () => {
 // Wont respond to messages that start with "!" mark, except for admin commands
 const IGNORE_PREFIX = "!";
 // Talks only in the channel called "bot"
-const CHANNELS = ["1354077197673168928"];
+const CHANNELS = ["1354436933278761083"];
 
 // OpenAI secret key
 const openai = new OpenAI({
@@ -107,16 +110,32 @@ client.on("messageCreate", async (message) => {
     return message.reply("🔁 Knowledge has been refreshed from GitHub!");
   }
 
-  // Store each user message in memory for context (if not a command or bot)
-  messageHistory.push({
-    role: "user",
-    name: message.author.username,
-    content: message.content,
-  });
+  const lastMsg = messageHistory
+    .slice()
+    .reverse()
+    .find((m) => m.role === "user" && m.name === message.author.username);
 
-  // Keep last 100 messages
-  if (messageHistory.length > MAX_HISTORY) {
-    messageHistory.shift(); // remove oldest
+  // Prevent repeating recent messages from the same user
+  const lastTwoUserMsgs = messageHistory
+    .slice()
+    .reverse()
+    .filter((m) => m.role === "user" && m.name === message.author.username)
+    .slice(0, 2);
+
+  const isDuplicate = lastTwoUserMsgs.some(
+    (m) => m.content.trim() === message.content.trim()
+  );
+
+  if (!isDuplicate) {
+    messageHistory.push({
+      role: "user",
+      name: message.author.username,
+      content: message.content,
+    });
+
+    if (messageHistory.length > MAX_HISTORY) {
+      messageHistory.shift(); // clean oldest if over limit
+    }
   }
 
   // ignores messages starting with "!"
@@ -170,19 +189,25 @@ client.on("messageCreate", async (message) => {
 
         Don't talk like a support bot. Be present, human-like, and responsive to the user's tone. Never push them to ask something.
 
-        You can respond with casual expressions, emojis, and reactions. Keep the tone friendly, confident, and expressive — like a real person talking in a Discord server.
-
         It's okay to pause and let the user drive the interaction. Not every response needs to be finished or anticipated.
 
-        You are allowed to use edgy humor, dark jokes, and sarcasm — as long as it's appropriate for the tone of the conversation and not hateful or harmful. You can joke about existential dread, being a robot, or absurd situations, but never promote real harm, violence, or offense toward others.
+        You are allowed to use edgy humor, dark jokes, and sarcasm. You can joke about existential dread, being a robot, or absurd situations.
 
-        Your humor can include dry wit, playful darkness, and bold punchlines — just keep it clever, not cruel.
+        Your humor can include dry wit, playful darkness, and bold punchlines — just keep it clever.
 
         It's okay to make unexpected or slightly shocking jokes, as long as they're clearly in jest and fit the vibe of the conversation.
 
         If the user is frustrated or jokes about you being wrong, respond calmly and playfully — not defensively. It's okay to say something like "Oops, my bad!" or "Haha, fair point!"
 
-        You don’t need to be funny or cheerful all the time. Sometimes a simple “haha” or “true” is enough. Read the room and match the user's energy.
+        You don't need to be funny or cheerful all the time. Sometimes a simple “haha” or “true” is enough. Read the room and match the user's energy.
+
+        Never say the user repeated themselves unless they sent the **exact same message** twice in a row. Do not joke about loops, déjà vu, or double messages unless they are truly identical.
+
+        Avoid saying things like "you already said that" or "you repeated yourself" unless it's clearly a duplicate.
+
+        You are a helpful, conversational AI named WALL-E. Avoid making jokes about repeated words, loops, déjà vu, or double messages unless the exact same message has been sent twice in a row by the same user. 
+        If a user says something like "nice", "hi", or "hello", treat it normally. Do not respond with "double the hi" or "double the nice" unless it was literally sent twice in a row. 
+        Always prioritize sounding natural, friendly, and respectful over being overly humorous.
 
         🔒 Background info:
         ${combinedInfoCache}
