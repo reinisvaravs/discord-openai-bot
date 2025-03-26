@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(PORT, async () => {
-  console.log(`[server port: ${PORT}]`);
+  console.log(`[port: ${PORT}]`);
   await initializeBotData();
 });
 
@@ -49,17 +49,13 @@ if (process.env.RENDER) {
   mode = "dev";
 }
 
-if (mode === "prod") {
-  CHANNELS = await getChannelId("prod_channel_id"); // bot channel prod
-  console.log("[production]:", CHANNELS);
-} else {
-  CHANNELS = await getChannelId("dev_channel_id"); // bot-dev channel
-  console.log("[development]:", CHANNELS);
-}
+const safeMode = mode === "prod" ? "prod" : "dev";
+CHANNELS = await getChannelId(`${safeMode}_channel_id`);
+console.log(`[channel: ${CHANNELS}]`);
 
 // Logs this when the bot is actually ready
 client.on("ready", async () => {
-  console.log("✅WALL-E is online");
+  console.log("✅ WALL-E is online");
 
   // Fetch the target channel by ID
   const channel = await client.channels.fetch(CHANNELS);
@@ -154,12 +150,22 @@ client.on("messageCreate", async (message) => {
         `UPDATE bot_config SET value = $1 WHERE key = '${mode}_channel_id'`,
         [newChannelId]
       );
-      return message.reply(`✅ Bot has moved to <#${newChannelId}>`);
+      message.reply(`✅ Bot has moved to <#${newChannelId}>`);
     } catch (err) {
       console.error("❌ Failed to update channel ID:", err);
       return message.reply(
         `❌ Something went wrong while changing the channel for ${mode} mode.`
       );
+    }
+
+    CHANNELS = newChannelId;
+
+    // Fetch the new channel
+    const newChannel = await client.channels.fetch(newChannelId);
+
+    // If it's a text-based channel, send a message
+    if (newChannel?.isTextBased()) {
+      await newChannel.send("🤖 WALL-E has been moved to this channel!");
     }
   }
 
