@@ -9,6 +9,7 @@ import {
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import pool, { getChannelId } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,26 +36,33 @@ const client = new Client({
 // Wont respond to messages that start with "!" mark, except for admin commands
 const IGNORE_PREFIX = "!";
 
-let CHANNELS = [];
+let CHANNELS;
 
 console.log(""); // space in terminal
 console.log(""); // space in terminal
 console.log(""); // space in terminal
 
+let mode;
 if (process.env.RENDER) {
-  CHANNELS = ["1354436933278761083"]; // bot channel prod
-  console.log("[production]");
+  mode = "prod";
 } else {
-  CHANNELS = ["1354472784796844204"]; // bot-dev channel
-  console.log("[development]");
+  mode = "dev";
+}
+
+if (mode === "prod") {
+  CHANNELS = await getChannelId("prod_channel_id"); // bot channel prod
+  console.log("[production]:", CHANNELS);
+} else {
+  CHANNELS = await getChannelId("dev_channel_id"); // bot-dev channel
+  console.log("[development]:", CHANNELS);
 }
 
 // Logs this when the bot is actually ready
 client.on("ready", async () => {
   console.log("✅WALL-E is online");
-  
+
   // Fetch the target channel by ID
-  const channel = await client.channels.fetch(CHANNELS[0]);
+  const channel = await client.channels.fetch(CHANNELS);
 
   if (channel && channel.isTextBased()) {
     channel.send("WALL-E is now online. 🤖");
@@ -127,6 +135,32 @@ client.on("messageCreate", async (message) => {
       await getKnowledgeSourcesFromGithub()
     );
     return message.reply("🔁 Knowledge has been refreshed from GitHub!");
+  }
+
+  if (message.content.startsWith("!change channel to")) {
+    if (!message.member?.permissions.has("Administrator")) {
+      return message.reply("❌ You don't have permission to do that.");
+    }
+
+    const parts = message.content.split(" ");
+    const newChannelId = parts.at(-1);
+
+    if (!/^\d+$/.test(newChannelId)) {
+      return message.reply("❌ Please provide a valid channel ID.");
+    }
+
+    try {
+      await pool.query(
+        `UPDATE bot_config SET value = $1 WHERE key = '${mode}_channel_id'`,
+        [newChannelId]
+      );
+      return message.reply(`✅ Bot has moved to <#${newChannelId}>`);
+    } catch (err) {
+      console.error("❌ Failed to update channel ID:", err);
+      return message.reply(
+        `❌ Something went wrong while changing the channel for ${mode} mode.`
+      );
+    }
   }
 
   messageHistory.push({
