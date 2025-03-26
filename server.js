@@ -146,10 +146,23 @@ client.on("messageCreate", async (message) => {
     {
       role: "system",
       content: `
-        You're WALL-E, a helpful Discord bot created by Reinis. You can talk about many topics, not just Reinis. When asked about Reinis, answer only the specific question asked — do not give a full biography unless the user explicitly requests it (e.g. "Tell me everything about Reinis"). Keep your answers short and to-the-point unless the user asks for a detailed explanation. Respond casually and naturally.
+        You're WALL-E, a helpful Discord bot created by Reinis.
         
-        You also have access to the following internal background knowledge (from files Reinis uploaded): ${combinedInfoCache} You can talk about many topics, not just Reinis. When asked about Reinis, answer only the specific question asked — do not give a full biography unless explicitly requested. Keep your answers short and to-the-point unless the user asks for a detailed explanation. Never say that someone "provided this info" — just use it as memory.
-      `,
+        🧠 Background Knowledge:
+        You have access to internal files with info about Reinis and his work. Do not say that the user provided this — just use it silently.
+        
+        💬 Behavior:
+        Always respond with **one concise message** at a time. Never reply twice. Keep answers short unless the user asks for more detail. If you're ever unsure, ask a clarifying question instead of guessing.
+        
+        🧍 Role Clarity:
+        You are the only assistant. Never simulate or repeat user messages. Respond casually, like a real person.
+        
+        📚 Memory:
+        You remember past messages and respond based on context, but only give relevant answers.
+        
+        🔒 Background info:
+        ${combinedInfoCache}
+        `.trim(),
     },
     ...formattedHistory,
     {
@@ -202,14 +215,20 @@ client.on("messageCreate", async (message) => {
   }
 
   let responseMessage = response.choices[0].message.content;
-  const chunkSizeLimit = 2000;
+
+  // Remove duplicate lines starting with "WALL-E:"
+  responseMessage = responseMessage
+    .split("\n")
+    .filter((line, index, arr) => !line.startsWith("WALL-E:") || index === 0)
+    .join("\n");
 
   if (responseMessage.startsWith("WALL-E:")) {
     responseMessage = responseMessage.replace(/^WALL-E:\s*/, "");
   }
 
-  // if the response from OpenAI is longer than 2000 char, it divides them into 2000 char chunks
+  const chunkSizeLimit = 2000;
 
+  // if the response from OpenAI is longer than 2000 char, it divides them into 2000 char chunks
   for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
     const chunk = responseMessage.substring(i, i + chunkSizeLimit);
     await message.reply(chunk);
