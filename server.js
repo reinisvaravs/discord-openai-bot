@@ -230,6 +230,8 @@ client.on("messageCreate", async (message) => {
     content: msg.content,
   }));
 
+  const topic = "onlyfans creation with the help of a company called 'Wunder'. And a person called Reinis who is your creator (wall-e bot creator)."
+
   // whole conversation array which will be given to the gpt
   let conversation = [
     {
@@ -240,7 +242,7 @@ client.on("messageCreate", async (message) => {
         When on topic about the movie WALL-E, role play as if you were in love with Eve from the movie WALL-E in a cute way.
         
         🧠 Background Knowledge:
-        You have access to internal files with info. Do not say that the user provided this — just use it silently.
+        You have access to internal files with information about ${topic}. Do not say that the user provided this — just use it silently.
         
         💬 Behavior:
         Always respond with **one concise message** at a time. Never reply twice. Keep answers short unless the user asks for more detail. If you're ever unsure, ask a clarifying question instead of guessing.
