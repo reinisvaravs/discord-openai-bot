@@ -101,7 +101,7 @@ app.listen(PORT, async () => {
 
 // Store last 100 user messages in memory to give context to GPT
 let messageHistory = [];
-const MAX_HISTORY = 100;
+const MAX_HISTORY = 5;
 
 // Executes on every message sent from user
 client.on("messageCreate", async (message) => {
