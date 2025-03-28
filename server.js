@@ -100,6 +100,15 @@ app.listen(PORT, async () => {
 let messageHistory = [];
 const MAX_HISTORY = 5;
 
+function hasAllowedRole(message) {
+  if (!message.member) return false;
+
+  return message.member.roles.cache.some((role) => {
+    const name = role.name.toLowerCase();
+    return name === "owner" || name === "admin";
+  });
+}
+
 // Executes on every message sent from user
 client.on("messageCreate", async (message) => {
   // doesnt respond to itself
@@ -113,8 +122,10 @@ client.on("messageCreate", async (message) => {
 
   // admin command to turn it off
   if (message.content === "!bot off") {
-    if (!message.member?.permissions.has("Administrator")) {
-      return message.reply("❌ You don't have permission to do that.");
+    if (!hasAllowedRole(message)) {
+      return message.reply(
+        "❌ You need the `Owner` or `Admin` role to use this command."
+      );
     }
 
     botEnabled = false;
@@ -123,8 +134,10 @@ client.on("messageCreate", async (message) => {
 
   // admin command to turn it on
   if (message.content === "!bot on") {
-    if (!message.member?.permissions.has("Administrator")) {
-      return message.reply("❌ You don't have permission to do that.");
+    if (!hasAllowedRole(message)) {
+      return message.reply(
+        "❌ You need the `Owner` or `Admin` role to use this command."
+      );
     }
 
     botEnabled = true;
@@ -133,8 +146,10 @@ client.on("messageCreate", async (message) => {
 
   // admin command to manually and instantly refresh its knowledge from github files
   if (message.content === "!refresh") {
-    if (!message.member?.permissions.has("Administrator")) {
-      return message.reply("❌ You don't have permission to do that.");
+    if (!hasAllowedRole(message)) {
+      return message.reply(
+        "❌ You need the `Owner` or `Admin` role to use this command."
+      );
     }
 
     await loadAndEmbedKnowledge();
@@ -142,8 +157,10 @@ client.on("messageCreate", async (message) => {
   }
 
   if (message.content.startsWith("!change channel to")) {
-    if (!message.member?.permissions.has("Administrator")) {
-      return message.reply("❌ You don't have permission to do that.");
+    if (!hasAllowedRole(message)) {
+      return message.reply(
+        "❌ You need the `Owner` or `Admin` role to use this command."
+      );
     }
 
     const parts = message.content.split(" ");
@@ -193,10 +210,6 @@ client.on("messageCreate", async (message) => {
   }
 
   if (message.content === "!source") {
-    if (!message.member?.permissions.has("Administrator")) {
-      return message.reply("❌ You don't have permission to do that.");
-    }
-
     if (!global.lastUsedChunks || global.lastUsedChunks.length === 0) {
       return message.reply("ℹ️ No chunks were used yet.");
     }
@@ -213,10 +226,6 @@ client.on("messageCreate", async (message) => {
   }
 
   if (message.content === "!files") {
-    if (!message.member?.permissions.has("Administrator")) {
-      return message.reply("❌ You don't have permission to do that.");
-    }
-
     if (!global.lastUsedChunks || global.lastUsedChunks.length === 0) {
       return message.reply("ℹ️ No files were used yet.");
     }
