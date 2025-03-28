@@ -11,6 +11,20 @@ Built for maintainability, transparency, and flexibility.
 
 ---
 
+## 📚 Table of Contents
+
+- [Features](#-features)
+- [File Structure](#-file-structure)
+- [GitHub Integration](#-github-integration)
+- [Getting Started](#-getting-started)
+- [How Knowledge Embedding Works](#-how-knowledge-embedding-works)
+- [Testing](#-testing)
+- [Built With](#-built-with)
+- [Author](#-author)
+- [License](#-license)
+
+---
+
 ## 🚀 Features
 
 - ✅ **Multiformat Knowledge Embedding**  
@@ -43,9 +57,7 @@ Built for maintainability, transparency, and flexibility.
   - Does not act like a model or support bot
   - Follows strict coaching role rules
   - Supports edgy humor, sarcasm, and relaxed chat
-
-- ✅ **Web API Access**  
-  `/send-remote` endpoint lets you send messages to Discord via HTTP (with rate limiting + password)
+  - 🛠️ System prompt is defined inside `server.js`
 
 ---
 
@@ -53,13 +65,13 @@ Built for maintainability, transparency, and flexibility.
 
 ```
 📁 gpt-bot/
-👉 db.js                    # PostgreSQL connection + channel config
-👉 githubFileLoader.js     # GitHub file fetching + parsing
-👉 knowledgeEmbedder.js    # Embedding, vector storage, similarity matching
-👉 server.js               # Discord + OpenAI + Express core logic
-👉 index.html              # Simple web frontend for remote message sending
-👉 package.json
-👉 .env
+├── db.js                    # PostgreSQL connection + channel config
+├── githubFileLoader.js     # GitHub file fetching + parsing
+├── knowledgeEmbedder.js    # Embedding, vector storage, similarity matching
+├── server.js               # Discord + OpenAI + Express core logic
+├── index.html              # Simple web frontend for remote message sending
+├── package.json
+├── .env                    # ⚠️ Do not commit this file!
 ```
 
 ---
@@ -103,6 +115,8 @@ DATABASE_URL=postgres://username:password@host:port/db
 REMOTE_PASSWORD=your_custom_remote_password
 ```
 
+> ⚠️ **Important:** Do not commit `.env` to GitHub. Add it to `.gitignore`.
+
 ### 4. Start the bot
 
 ```bash
@@ -129,7 +143,7 @@ npm start
 
 ---
 
-## 🛠️ Built With
+## 🧰 Built With
 
 - [discord.js](https://discord.js.org/)
 - [OpenAI SDK](https://www.npmjs.com/package/openai)
