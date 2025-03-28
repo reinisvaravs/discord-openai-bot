@@ -243,11 +243,10 @@ client.on("messageCreate", async (message) => {
     messageHistory.shift(); // clean oldest if over limit
   }
 
-  // ignores messages starting with "!"
-  if (message.content.startsWith(IGNORE_PREFIX)) return;
-
   // stops this function if bot is not on
   if (!botEnabled) return;
+  // ignores messages starting with "!"
+  if (message.content.startsWith(IGNORE_PREFIX)) return;
 
   // typing animation in discord
   await message.channel.sendTyping();
@@ -381,16 +380,24 @@ client.on("messageCreate", async (message) => {
 
   const chunkSizeLimit = 2000;
 
-  // if the response from OpenAI is longer than 2000 char, it divides them into 2000 char chunks
-  for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
-    const chunk = responseMessage.substring(i, i + chunkSizeLimit);
-    await message.reply(chunk);
+  if (responseMessage.length <= chunkSizeLimit) {
+    await message.reply(responseMessage);
     messageHistory.push({
       role: "assistant",
       name: "WALL-E",
-      content: chunk,
+      content: responseMessage,
     });
-    await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
+  } else {
+    for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
+      const chunk = responseMessage.substring(i, i + chunkSizeLimit);
+      await message.reply(chunk);
+      messageHistory.push({
+        role: "assistant",
+        name: "WALL-E",
+        content: chunk,
+      });
+      await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
+    }
   }
 });
 
