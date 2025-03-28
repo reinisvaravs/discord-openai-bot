@@ -59,7 +59,7 @@ export async function getKnowledgeSourcesFromGithub() {
 
 // Downloads and parses files based on their type
 // Returns one large combined string
-export async function fetchRemoteKnowledge(sources) {
+export async function fetchAndParseGithubFiles(sources) {
   const allTextChunks = [];
 
   for (const { url, type, name } of sources) {
@@ -131,6 +131,6 @@ export async function fetchRemoteKnowledge(sources) {
     }
   }
 
-  // Return one large combined string with all parsed content
-  return allTextChunks.join("\n\n");
+  // Returns array of labeled strings per file
+  return allTextChunks;
 }

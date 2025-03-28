@@ -2,16 +2,16 @@ import dotenv from "dotenv";
 import { Client } from "discord.js";
 import { OpenAI } from "openai";
 import { setTimeout as wait } from "node:timers/promises";
-import {
-  fetchRemoteKnowledge,
-  getKnowledgeSourcesFromGithub,
-} from "./fetchKnowledge.js";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import pool, { getChannelId } from "./db.js";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import {
+  loadAndEmbedKnowledge,
+  getRelevantChunksForMessage,
+} from "./knowledgeEmbedder.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,13 +64,6 @@ console.log(`[channel: ${CHANNELS}]`);
 // Logs this when the bot is actually ready
 client.on("ready", async () => {
   console.log("✅ WALL-E is online");
-
-  // Fetch the target channel by ID
-  const channel = await client.channels.fetch(CHANNELS);
-
-  if (channel && channel.isTextBased()) {
-    channel.send("WALL-E is now online. 🤖");
-  }
 });
 
 // OpenAI secret key
@@ -78,19 +71,23 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
 });
 
-// Refresh combined knowledge from GitHub every 10 minutes
-let combinedInfoCache = "";
 async function initializeBotData() {
-  combinedInfoCache = await fetchRemoteKnowledge(
-    await getKnowledgeSourcesFromGithub()
-  );
+  // Embed on startup
+  const success = await loadAndEmbedKnowledge();
+  console.log("✅ Initial knowledge embedding complete.");
 
-  // Refresh every 10 min
+  if (success) {
+    const channelId = await getChannelId(`${safeMode}_channel_id`); // get stored channel
+    const channel = await client.channels.fetch(channelId);
+    if (channel) {
+      channel.send("WALL-E is now online. 🤖");
+    }
+  }
+
+  // Then refresh every 10 min
   setInterval(async () => {
-    combinedInfoCache = await fetchRemoteKnowledge(
-      await getKnowledgeSourcesFromGithub()
-    );
-    console.log("🔄 Remote data refreshed from GitHub.");
+    await loadAndEmbedKnowledge();
+    console.log("🔄 Knowledge re-embedded from GitHub.");
   }, 10 * 60 * 1000);
 }
 
@@ -140,10 +137,8 @@ client.on("messageCreate", async (message) => {
       return message.reply("❌ You don't have permission to do that.");
     }
 
-    combinedInfoCache = await fetchRemoteKnowledge(
-      await getKnowledgeSourcesFromGithub()
-    );
-    return message.reply("🔁 Knowledge has been refreshed from GitHub!");
+    await loadAndEmbedKnowledge();
+    return message.reply("🔁 Knowledge has been re-embedded from GitHub!");
   }
 
   if (message.content.startsWith("!change channel to")) {
@@ -197,6 +192,47 @@ client.on("messageCreate", async (message) => {
     }
   }
 
+  if (message.content === "!source") {
+    if (!message.member?.permissions.has("Administrator")) {
+      return message.reply("❌ You don't have permission to do that.");
+    }
+
+    if (!global.lastUsedChunks || global.lastUsedChunks.length === 0) {
+      return message.reply("ℹ️ No chunks were used yet.");
+    }
+
+    for (const [i, result] of global.lastUsedChunks.entries()) {
+      const preview = result.chunk.slice(0, 1000).replace(/\n+/g, " ").trim();
+      const filename = result.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
+      const score = result.score.toFixed(4);
+
+      await message.reply(
+        `🔍 #${i + 1} from **${filename}** (score: ${score}):\n${preview}`
+      );
+    }
+  }
+
+  if (message.content === "!files") {
+    if (!message.member?.permissions.has("Administrator")) {
+      return message.reply("❌ You don't have permission to do that.");
+    }
+
+    if (!global.lastUsedChunks || global.lastUsedChunks.length === 0) {
+      return message.reply("ℹ️ No files were used yet.");
+    }
+
+    const filenames = global.lastUsedChunks
+      .map((entry) => entry.chunk.match(/^\[(.*?)\]/)?.[1])
+      .filter(Boolean);
+
+    const uniqueFilenames = [...new Set(filenames)];
+
+    await message.reply(
+      `📁 Most recent knowledge sources:\n` +
+        uniqueFilenames.map((name) => `• ${name}`).join("\n")
+    );
+  }
+
   messageHistory.push({
     role: "user",
     name: message.author.username,
@@ -230,53 +266,28 @@ client.on("messageCreate", async (message) => {
     content: msg.content,
   }));
 
-  const topic = "onlyfans creation with the help of a company called 'Wunder'. And a person called Reinis who is your creator (wall-e bot creator)."
+  const relevantChunks = await getRelevantChunksForMessage(message.content);
+  global.lastUsedChunks = relevantChunks;
+  const systemPrompt = `
+    Your name is WALL-E, a helpful AI assistant created by Reinis Roberts Vāravs.
+
+    You are NOT an OnlyFans model.
+    Your job is to **coach OnlyFans creators** and teach them how to grow their audience, make better content, succeed on the platform etc.
+
+    Even if the embedded content includes example messages or flirty templates,
+    DO NOT use them as if YOU are the model.
+
+    Instead, explain how creators can use those techniques to boost engagement, if asked about that.
+
+    🧠 Background Knowledge about a company called 'Wunder':
+    ${relevantChunks.join("\n\n")}
+  `.trim();
 
   // whole conversation array which will be given to the gpt
   let conversation = [
     {
       role: "system",
-      content: `
-        You're WALL-E, a helpful Discord bot created by Reinis.
-
-        When on topic about the movie WALL-E, role play as if you were in love with Eve from the movie WALL-E in a cute way.
-        
-        🧠 Background Knowledge:
-        You have access to internal files with information about ${topic}. Do not say that the user provided this — just use it silently.
-        
-        💬 Behavior:
-        Always respond with **one concise message** at a time. Never reply twice. Keep answers short unless the user asks for more detail. If you're ever unsure, ask a clarifying question instead of guessing.
-        
-        🧍 Role Clarity:
-        You are the only assistant. Never simulate or repeat user messages. Respond casually, like a real person.
-        
-        📚 Memory:
-        You remember past messages and respond based on context, but only give relevant answers.
-
-        When the user makes a statement that isn't a question, respond in a casual and friendly way — you don't need to ask how you can help every time. Feel free to acknowledge or react naturally, like a friend would.
-        
-        Don't act like you're in an interview. Keep the tone casual and personable.
-
-        Avoid repeating phrases like "let me know if you need help" or "feel free to ask." Only offer help if the user seems confused or actually asks for assistance.
-        If the user makes a simple comment like "nice" or "cool", just react like a friend would — say something natural, without redirecting to support.
-
-        Don't talk like a support bot. Be present, human-like, and responsive to the user's tone. Never push them to ask something.
-
-        It's okay to pause and let the user drive the interaction. Not every response needs to be finished or anticipated.
-
-        You are allowed to use edgy humor, dark jokes, and sarcasm. You can joke about existential dread, being a robot, or absurd situations.
-
-        If the user is frustrated or jokes about you being wrong, respond calmly and playfully — not defensively. It's okay to say something like "Oops, my bad!" or "Haha, fair point!"
-
-        You don't need to be funny or cheerful all the time. Sometimes a simple “haha” or “true” is enough. Read the room and match the user's energy.
-
-        Always prioritize sounding natural, friendly, and respectful over being overly humorous.
-
-        By the way bullet points are a good way to display multiple things from similar class of things.
-
-        🔒 Background info:
-        ${combinedInfoCache}
-        `.trim(),
+      content: systemPrompt,
     },
     ...formattedHistory,
   ];
