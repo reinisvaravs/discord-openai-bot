@@ -23,6 +23,7 @@ Built for maintainability, transparency, and flexibility.
 - [Getting Started](#-getting-started)
 - [How Knowledge Embedding Works](#-how-knowledge-embedding-works)
 - [Testing](#-testing)
+- [Upcoming Features](#-upcoming-features)
 - [Built With](#-built-with)
 - [Author](#-author)
 - [License](#-license)
@@ -147,6 +148,20 @@ npm start
 
 ---
 
+## 🧭 Upcoming Features
+
+🟡 File-based knowledge change detection (auto-refresh on updates) [in progress]
+
+🟡 Persistent vector storage with PostgreSQL + pgvector
+
+🟡 Dashboard UI to view logs, sources, vector stats, and bot usage
+
+🟡 Message analytics (track most asked questions, top matched files)
+
+🟡 User-specific context memory (thread/session-based)
+
+---
+
 ## 🧰 Built With
 
 - [discord.js](https://discord.js.org/)
@@ -165,6 +180,7 @@ npm start
 **Reinis Roberts Vāravs**  
 Latvia 🇱🇻 | Full-stack Developer  
 🌐 [Portfolio site](https://reinisvaravs.com)
+🔗 [GitHub](https://github.com/reinisvaravs)
 
 ---
 
