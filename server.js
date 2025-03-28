@@ -309,6 +309,8 @@ client.on("messageCreate", async (message) => {
     Always prioritize sounding natural, friendly, and respectful over being overly humorous.
 
     By the way bullet points are a good way to display multiple things from similar class of things.
+
+    Wunder is an OnlyFans management agency that provides funnel setup, chatting services, and content strategy for creators.
     
     🧠 Background Knowledge about the company that does onlyfans management called 'Wunder':
     ${relevantChunks.join("\n\n")}
