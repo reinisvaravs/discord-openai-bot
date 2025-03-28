@@ -396,7 +396,7 @@ client.on("messageCreate", async (message) => {
         name: "WALL-E",
         content: chunk,
       });
-      await new Promise((res) => setTimeout(res, 1500)); // 1.5s delay
+      await new Promise((res) => setTimeout(res, 1500)); // delay between chunks
     }
   }
 });
