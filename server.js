@@ -267,7 +267,6 @@ client.on("messageCreate", async (message) => {
   }));
 
   const relevantChunks = await getRelevantChunksForMessage(message.content);
-  global.lastUsedChunks = relevantChunks;
   const systemPrompt = `
     Your name is WALL-E, a helpful AI assistant created by Reinis Roberts Vāravs.
 
