@@ -150,9 +150,7 @@ npm start
 
 ## 🧭 Upcoming Features
 
-🟡 File-based knowledge change detection (auto-refresh on updates) [in progress]
-
-🟡 Persistent vector storage with PostgreSQL + pgvector
+🟡 Persistent vector storage with PostgreSQL + pgvector [in progress]
 
 🟡 Dashboard UI to view logs, sources, vector stats, and bot usage
 

@@ -1,4 +1,5 @@
 import pool from "../db.js";
+import { resetFileHashCache } from "../core/fileHashCache.js";
 
 export async function handleAdminCommands(
   message,
@@ -27,12 +28,15 @@ export async function handleAdminCommands(
     message.reply("✅ WALL-E is back online.");
   }
 
-  // manual knowledge refresh (soon wont be neccessary)
+  // manual knowledge refresh
   else if (content === "!refresh") {
     if (!hasAllowedRole(message)) return;
+
+    resetFileHashCache(); // Clear previous hashes
+
     refreshFn().then((newCache) => {
       combinedInfoCacheRef.value = newCache;
-      message.reply("🔁 Knowledge refreshed from GitHub.");
+      message.reply("🔁 Knowledge refreshed from GitHub (full re-embed).");
     });
   }
 

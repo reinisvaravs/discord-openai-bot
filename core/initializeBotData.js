@@ -12,4 +12,9 @@ export async function initializeBotData(client, safeMode) {
       channel.send("WALL-E is now online. 🤖");
     }
   }
+
+  setInterval(async () => {
+    await loadAndEmbedKnowledge();
+    console.log("🔄 Knowledge re-embedded from GitHub.");
+  }, 10 * 60 * 1000);
 }

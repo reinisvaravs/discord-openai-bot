@@ -3,15 +3,11 @@ import {
   fetchAndParseGithubFiles, // gives a list of github file urls + types
   getKnowledgeSourcesFromGithub, // downloads and parses file content into a big string
 } from "./githubFileLoader.js";
+import { hasFileChanged } from "./core/fileHashCache.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 let embeddedChunks = []; // stores: [{ string chunk, vector }]
-// Example:
-// {
-//     chunk: "Text from one part of a file",
-//     vector: [0.131, 0.845, ...] // vector representation from OpenAI
-// }
 
 function splitIntoChunks(text, maxTokens = 500) {
   const sentences = text.split(/\.\s+/); // splits on periods followed by space
@@ -49,9 +45,15 @@ export async function loadAndEmbedKnowledge() {
 
   for (let fileText of files) {
     fileText = fileText.trim();
-    const nameMatch = fileText.trim().match(/^\[(.*?)\]/);
+    const nameMatch = fileText.match(/^\[(.*?)\]/);
     const name = nameMatch?.[1]?.trim() || "unknown_file";
-    const content = fileText.slice(nameMatch[0].length).trim(); // clean removal of label
+    const content = fileText.slice(nameMatch[0].length).trim();
+
+    if (!hasFileChanged(name, content)) {
+      console.log(`⚪ Skipped unchanged file: ${name}`);
+      continue;
+    }
+
     const chunks = splitIntoChunks(content);
 
     for (const chunk of chunks) {
