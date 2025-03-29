@@ -1,17 +1,16 @@
 import crypto from "crypto";
-
-const fileHashCache = new Map(); // key: filename, value: hash
+import { getStoredFileHash, storeFileHash } from "../db.js";
 
 export function getFileHash(content) {
   return crypto.createHash("sha256").update(content).digest("hex");
 }
 
-export function hasFileChanged(filename, content) {
+export async function hasFileChanged(filename, content) {
   const newHash = getFileHash(content);
-  const oldHash = fileHashCache.get(filename);
+  const oldHash = await getStoredFileHash(filename);
 
   const isChanged = newHash !== oldHash;
-  if (isChanged) fileHashCache.set(filename, newHash);
+  if (isChanged) await storeFileHash(filename, newHash);
 
   return isChanged;
 }

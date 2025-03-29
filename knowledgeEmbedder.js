@@ -4,6 +4,7 @@ import {
   getKnowledgeSourcesFromGithub, // downloads and parses file content into a big string
 } from "./githubFileLoader.js";
 import { hasFileChanged } from "./core/fileHashCache.js";
+import { saveVectorChunk, loadAllVectors, findSimilarChunks } from "./db.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
@@ -26,22 +27,16 @@ function splitIntoChunks(text, maxTokens = 500) {
   return chunks;
 }
 
-function cosineSimilarity(vec1, vec2) {
-  const dot = vec1.reduce((sum, v, i) => sum + v * vec2[i], 0);
-  const mag1 = Math.sqrt(vec1.reduce((sum, v) => sum + v * v, 0));
-  const mag2 = Math.sqrt(vec2.reduce((sum, v) => sum + v * v, 0));
-  return dot / (mag1 * mag2);
-}
-// Example:
-// 1.0 = exactly the same meaning
-// 0.9 = very similar
-// 0.1 = totally unrelated
-
 export async function loadAndEmbedKnowledge() {
-  const sources = await getKnowledgeSourcesFromGithub(); // 1. Get list of files
+  embeddedChunks = await loadAllVectors(); // prev vectors from db
+
+  console.log(`📦 Loaded ${embeddedChunks.length} chunks from PostgreSQL`);
+
+  // GitHub fetch for new/updated files
+  const sources = await getKnowledgeSourcesFromGithub();
   const files = await fetchAndParseGithubFiles(sources);
 
-  embeddedChunks = []; // reset
+  let totalChunks = 0;
 
   for (let fileText of files) {
     fileText = fileText.trim();
@@ -49,7 +44,7 @@ export async function loadAndEmbedKnowledge() {
     const name = nameMatch?.[1]?.trim() || "unknown_file";
     const content = fileText.slice(nameMatch[0].length).trim();
 
-    if (!hasFileChanged(name, content)) {
+    if (!(await hasFileChanged(name, content))) {
       console.log(`⚪ Skipped unchanged file: ${name}`);
       continue;
     }
@@ -64,24 +59,25 @@ export async function loadAndEmbedKnowledge() {
         model: "text-embedding-3-small",
       });
 
+      const vector = res.data[0].embedding;
+
       embeddedChunks.push({
         chunk: labeledChunk,
-        vector: res.data[0].embedding,
+        vector,
       });
+
+      await saveVectorChunk(name, labeledChunk, vector); // saves to db
     }
+    totalChunks += chunks.length;
   }
 
-  // LOGS =>
-  const totalTextLength = files.reduce((sum, file) => sum + file.length, 0);
-  console.log("📥 Combined GitHub text length:", totalTextLength);
-
-  const totalChunks = files.reduce((sum, fileText) => {
-    return sum + splitIntoChunks(fileText).length;
-  }, 0);
-  console.log("📦 Total chunks to embed:", totalChunks);
-
-  console.log(`📚 Embedded ${embeddedChunks.length} chunks.`);
-  // <= LOGS
+  // LOG
+  console.log("📚 Embedded", embeddedChunks.length, "total chunks.");
+  if (totalChunks === 0) {
+    console.log("✅ All files are up to date — no re-embedding needed.");
+  } else {
+    console.log(`📥 Total re-embedded chunks: ${totalChunks}`);
+  }
 
   return true;
 }
@@ -91,30 +87,21 @@ export async function getRelevantChunksForMessage(message, topK = 4) {
     input: message,
     model: "text-embedding-3-small",
   });
+
   const messageVector = res.data[0].embedding;
+  const topChunks = await findSimilarChunks(messageVector, topK);
 
-  const scored = embeddedChunks.map(({ chunk, vector }) => ({
-    chunk,
-    score: cosineSimilarity(messageVector, vector),
-  }));
-
-  scored.sort((a, b) => b.score - a.score);
-
-  console.log("📊 Similarity Match Summary");
+  console.log("📊 SQL Similarity Match Summary");
   console.log("🔍 User Question:", message);
-  console.log(`📦 Embedded chunks available: ${embeddedChunks.length}`);
+  console.log("📦 Top Matches:");
 
-  scored.slice(0, topK).forEach((item, i) => {
-    const preview = item.chunk.slice(0, 200).replace(/\n+/g, " ").trim();
-    const filename = item.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
-
-    console.log(
-      `\n#${i + 1}  [score: ${item.score.toFixed(4)}]  (${filename})`
-    );
+  topChunks.forEach((c, i) => {
+    const preview = c.chunk.slice(0, 200).replace(/\n+/g, " ").trim();
+    const filename = c.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
+    console.log(`#${i + 1}  [score: ${c.score.toFixed(4)}]  (${filename})`);
     console.log("📄 Preview:", preview);
   });
 
-  const topResults = scored.slice(0, topK);
-  global.lastUsedChunks = topResults; // Save full objects with chunk + score
-  return topResults.map((x) => x.chunk); // Still return only text chunks for GPT
+  global.lastUsedChunks = topChunks;
+  return topChunks.map((c) => c.chunk);
 }

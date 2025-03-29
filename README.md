@@ -11,7 +11,7 @@ Built for maintainability, transparency, and flexibility.
 
 ---
 
-<img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdWtqa3lxbGIyeTJjZTNvMDF0MmszaDdzcWNpNjV1a3B5N2R3ajBtMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iGJNOadhvBMuk/giphy.gif" width="500" alt="WALL-E Discord Bot Demo">
+<img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdWtqa3lxbGIyeTJjZTNvMDF0MmszaDdzcWNpNjV1a3B5N2R3ajBtMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iGJNOadhvBMuk/giphy.gif" width="500" alt="WALL-E in real life">
 
 ---
 
@@ -33,7 +33,7 @@ Built for maintainability, transparency, and flexibility.
 ## 🚀 Features
 
 - ✅ **Multiformat Knowledge Embedding**  
-  Supports `.txt`, `.md`, `.docx`, `.pdf`, `.xlsx`, `.json`, `.html`, `.csv`, and `.yaml`.
+  Supports `.txt`, `.md`, `.docx`, `.pdf`, `.xlsx`, `.json`, `.html`, `.htm` `.csv`, `.yaml`, and `.yml`.
 
 - ✅ **Contextual GPT Responses**  
   Uses both user message history and vector-matched content chunks to generate high-quality answers.
@@ -42,6 +42,11 @@ Built for maintainability, transparency, and flexibility.
 
   - Automatically fetches & embeds knowledge from a public GitHub repo
   - Supports periodic auto-refresh and manual `!refresh`
+
+- ✅ **Auto-Embedding Optimization**
+
+  - Automatically re-embeds only files that changed (SHA256 hash check)
+  - Persistent embedding storage with PostgreSQL + pgvector
 
 - ✅ **Memory**
 
@@ -62,7 +67,9 @@ Built for maintainability, transparency, and flexibility.
   - Does not act like a model or support bot
   - Follows strict coaching role rules
   - Supports edgy humor, sarcasm, and relaxed chat
-  - 🛠️ System prompt is defined inside `server.js`
+
+- ✅ **Web API Access**  
+  `/send-remote` endpoint lets you send messages to Discord via HTTP (with rate limiting + password)
 
 ---
 
@@ -70,13 +77,26 @@ Built for maintainability, transparency, and flexibility.
 
 ```
 📁 gpt-bot/
-├── db.js                    # PostgreSQL connection + channel config
-├── githubFileLoader.js     # GitHub file fetching + parsing
-├── knowledgeEmbedder.js    # Embedding, vector storage, similarity matching
-├── server.js               # Discord + OpenAI + Express core logic
-├── index.html              # Simple web frontend for remote message sending
+├── core/
+│   ├── initializeBotData.js        # Startup embedding + auto-refresh
+│   ├── messageMemory.js            # In-memory chat context tracking
+│   ├── fetchOpenAIResponse.js      # Retry-safe OpenAI call
+│   ├── buildSystemPrompt.js        # Prompt builder from context chunks
+│   ├── permissions.js              # Role checker
+│   ├── typing.js                   # Typing animation util
+├── commands/
+│   ├── adminCommands.js            # !bot off, !refresh, etc.
+│   ├── infoCommands.js             # !source, !files
+├── events/
+│   └── onMessageCreate.js          # Main message handler
+├── githubFileLoader.js             # GitHub file fetching + parsing
+├── knowledgeEmbedder.js            # Embedding, pgvector storage, matching
+├── db.js                           # PostgreSQL connection + vector logic
+├── server.js                       # Express + Discord init
+├── index.html                      # Web UI for remote send
+├── .env                            # Environment variables (do not commit this)
+├── .env.example                    # Template for env variables
 ├── package.json
-├── .env                    # ⚠️ Do not commit this file!
 ```
 
 ---
@@ -133,28 +153,23 @@ npm start
 ## 🧠 How Knowledge Embedding Works
 
 - At startup, WALL-E fetches all files from GitHub
-- Parses and chunks each file (≈ 500 tokens per chunk)
-- Embeds each chunk using `text-embedding-3-small`
-- On every message, embeds the message and compares it to all known chunks using cosine similarity
-- Top 4 chunks are fed into the GPT system prompt
+- Computes SHA256 hash of each file to detect changes
+- Skips unchanged files by checking their SHA256 hash
+- Embeds changed chunks using `text-embedding-3-small`
+- Stores results in a PostgreSQL table with `pgvector`
+- Top 4 matched chunks are retrieved using vector similarity for GPT replies
 
 ---
 
 ## 🧪 Testing
 
-- Run `!refresh` in Discord to force a fresh embed from GitHub
-- Use `!source` to view which files/chunks were referenced
-- Check console logs for full vector similarity scores + previews
+- Run `!refresh` in Discord to force a full re-embed
+- Check logs to see whether a file was re-embedded or skipped due to no changes
+- Use `!source` and `!files` to see what content was used
 
 ---
 
 ## 🧭 Upcoming Features
-
-🟡 Persistent vector storage with PostgreSQL + pgvector [in progress]
-
-🟡 Dashboard UI to view logs, sources, vector stats, and bot usage
-
-🟡 Message analytics (track most asked questions, top matched files)
 
 🟡 User-specific context memory (thread/session-based)
 
@@ -165,6 +180,7 @@ npm start
 - [discord.js](https://discord.js.org/)
 - [OpenAI SDK](https://www.npmjs.com/package/openai)
 - [pg](https://node-postgres.com/)
+- [pgvector](https://github.com/pgvector/pgvector-node)
 - [mammoth](https://github.com/mwilliamson/mammoth.js)
 - [pdfjs-dist](https://github.com/mozilla/pdf.js)
 - [xlsx](https://www.npmjs.com/package/xlsx)
