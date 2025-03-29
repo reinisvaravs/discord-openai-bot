@@ -49,8 +49,11 @@ export async function onMessageCreate({
 
   if (wasAdminCommand || !toggleBotRef.value) return;
 
-  await handleInfoCommands(message, global.lastUsedChunks);
-  if (!toggleBotRef.value) return;
+  const infoWasHandled = await handleInfoCommands(
+    message,
+    global.lastUsedChunks
+  );
+  if (infoWasHandled || !toggleBotRef.value) return;
 
   if (!message.content.startsWith(IGNORE_PREFIX)) {
     addToMessageHistory("user", message.author.username, message.content);
