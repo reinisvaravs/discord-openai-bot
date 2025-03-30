@@ -9,6 +9,7 @@ import {
   loadAllVectors,
   findSimilarChunks,
   deleteVectorChunk,
+  getAllStoredFileNames,
 } from "./db.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
