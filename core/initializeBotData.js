@@ -12,9 +12,12 @@ export async function initializeBotData(client, safeMode) {
     }
   }
 
+  let githubCheckCounter = 0
+
   // check knowledge for changes
   setInterval(async () => {
+    githubCheckCounter += 1
     await loadAndEmbedKnowledge();
-    console.log("[github check]");
+    console.log(`[github check #${githubCheckCounter}]`);
   }, 10 * 60 * 1000); // 10min interval
 }

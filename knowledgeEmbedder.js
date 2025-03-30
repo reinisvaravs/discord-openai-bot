@@ -10,6 +10,7 @@ import {
   findSimilarChunks,
   deleteVectorChunk,
   getAllStoredFileNames,
+  deleteFileHash,
 } from "./db.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
@@ -34,15 +35,8 @@ function splitIntoChunks(text, maxTokens = 500) {
   return chunks;
 }
 
-// check for changes in vectors
-export async function loadAndEmbedKnowledge() {
-  embeddedChunks = await loadAllVectors(); // prev vectors from db
-  // console.log(`📦 Chunks in database: ${embeddedChunks.length}`);
-
-  // GitHub fetch for new/updated files
-  const sources = await getKnowledgeSourcesFromGithub(); // links for download
-  const files = await fetchAndParseGithubFiles(sources); // parsed all contents of a file
-
+// deletes files from db that are not in the github repo
+async function checkDeleted(files) {
   // returns array of strings of file names in github repo
   const currentGitHubFiles = files
     .map((f) => {
@@ -61,7 +55,24 @@ export async function loadAndEmbedKnowledge() {
   // deletes selected files
   for (const deleted of deletedFiles) {
     await deleteVectorChunk(deleted);
+    await deleteFileHash(deleted);
     console.log(`🗑️ Deleted all chunks for removed file: ${deleted}`);
+  }
+}
+
+// check for changes in vectors
+export async function loadAndEmbedKnowledge() {
+  embeddedChunks = await loadAllVectors(); // prev vectors from db
+  // console.log(`📦 Chunks in database: ${embeddedChunks.length}`);
+
+  // GitHub fetch for new/updated files
+  const sources = await getKnowledgeSourcesFromGithub(); // links for download
+  const files = await fetchAndParseGithubFiles(sources); // parsed all contents of a file
+
+  try {
+    await checkDeleted(files); // deletes files from db that are not in the github repo
+  } catch (error) {
+    console.error("❌ Error in checkDeleted():", error);
   }
 
   let totalChunks = 0; // total re-embedded chunks

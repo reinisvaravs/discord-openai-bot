@@ -18,7 +18,11 @@ export async function getChannelId(type) {
 // deletes all chunks and vectors of a changed file
 export async function deleteVectorChunk(fileName) {
   await pool.query(`DELETE FROM vectors WHERE file_name = $1`, [fileName]);
+}
+
+export async function deleteFileHash(fileName) {
   await pool.query(`DELETE FROM file_hashes WHERE file_name = $1`, [fileName]);
+  console.log("[deleting hash from}:", fileName);
 }
 
 // saves chunks to db
@@ -60,6 +64,7 @@ export async function findSimilarChunks(messageEmbedding, topN = 4) {
   return result.rows;
 }
 
+// returns hash of passed file
 export async function getStoredFileHash(filename) {
   const result = await pool.query(
     `SELECT hash FROM file_hashes WHERE file_name = $1`,
@@ -68,6 +73,7 @@ export async function getStoredFileHash(filename) {
   return result.rows[0]?.hash || null;
 }
 
+// ads or updates hash
 export async function storeFileHash(filename, hash) {
   await pool.query(
     `
