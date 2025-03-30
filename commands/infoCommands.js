@@ -40,7 +40,13 @@ export async function handleInfoCommands(message, lastUsedChunks) {
     }
 
     for (const [i, result] of filteredChunks.entries()) {
-      const preview = result.chunk.slice(0, 1000).replace(/\n+/g, " ").trim();
+      const preview =
+        result.chunk
+          .trimStart()
+          .replace(/^\[[^\]]+\]\s*/, "")
+          .replace(/\n+/g, " ")
+          .slice(0, 1000) + (result.chunk.length > 1000 ? "..." : "");
+
       const filename = result.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
       const normalizedScore = (Math.abs(result.score) * 10).toFixed(1);
 
