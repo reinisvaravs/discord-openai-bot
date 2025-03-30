@@ -4,100 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WALL-E Discord Bot</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #121212;
-        color: #f0f0f0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        text-align: center;
-      }
-
-      h1 {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .tagline {
-        color: #9ae3ff;
-        font-weight: 600;
-        margin-bottom: 2rem;
-      }
-
-      img {
-        width: 50px;
-        height: 50px;
-      }
-      input {
-        margin-top: 50px;
-        width: 70%;
-        height: 50px;
-        background-color: transparent;
-        border: 1px solid white;
-        color: white;
-        font-size: 18px;
-        padding-left: 10px;
-      }
-      button {
-        width: 100px;
-        height: 50px;
-        background-color: transparent;
-        color: white;
-        border: 1px solid white;
-        font-size: 20px;
-        margin-top: 20px;
-        font-family: "Courier New", Courier, monospace;
-        cursor: pointer;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>🤖 WALL-E is Online</h1>
-    <div class="tagline">
-      The AI-powered Discord bot created by Reinis Vāravs
+    <div class="icons">
+      <img src="./assets/PostgresSQL.svg" alt="PostgreSQL" />
+      <img src="./assets/Node.js.svg" alt="Node.js" />
+      <img src="./assets/Express.svg" alt="Express.js" />
+      <img src="./assets/JavaScript.svg" alt="JavaScript" />
+      <img src="./assets/Discord.js.svg" alt="Discord.js" />
     </div>
-    <img src="./javascript.png" alt="js_logo" />
 
+    <h1>WALL-E</h1>
+
+    <p>Remote messaging for Admins (as bot)</p>
     <input id="message" type="text" placeholder="message" />
     <input id="password" type="password" placeholder="password" />
+    <div class="btnDiv">
+      <button id="sendBtn">Send</button>
+    </div>
 
-    <button id="sendBtn">Send</button>
+    <h3>📊 System Status</h3>
+    <div id="statusBox"></div>
 
-    <script>
-      // const API_BASE_URL = "http://localhost:3000"
-      const API_BASE_URL = "https://discord-openai-bot-0vmd.onrender.com"
-
-      document.getElementById("sendBtn").onclick = async () => {
-        const message = document.getElementById("message").value;
-        const password = document.getElementById("password").value;
-
-        const payload = {
-          message: message,
-          channelId: "1354513880969121832",
-          password,
-        };
-
-        try {
-          const res = await fetch(`${API_BASE_URL}/send-remote`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-
-          const text = await res.text();
-          alert(text); // Show success or error response
-        } catch (err) {
-          alert("❌ Failed to send message");
-          console.error(err);
-        }
-      };
-    </script>
+    <script src="script.js"></script>
   </body>
 </html>

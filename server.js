@@ -10,6 +10,7 @@ import { getChannelId } from "./db.js";
 import { onMessageCreate } from "./events/onMessageCreate.js";
 import { initializeBotData } from "./core/initializeBotData.js";
 import { createRemoteRouter } from "./routes/remoteRouter.js";
+import { statusRouter } from "./routes/statusRouter.js";
 
 dotenv.config();
 
@@ -76,6 +77,15 @@ app.listen(PORT, async () => {
   console.log(`[port: ${PORT}]`);
   await initializeBotData(client, safeMode);
 });
+
+// status route
+app.use(
+  "/status",
+  statusRouter({
+    safeMode,
+    allowedChannelIdRef,
+  })
+);
 
 // Remote HTTP control route
 app.use("/send-remote", createRemoteRouter(client));
