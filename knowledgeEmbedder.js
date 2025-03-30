@@ -40,9 +40,30 @@ export async function loadAndEmbedKnowledge() {
 
   // GitHub fetch for new/updated files
   const sources = await getKnowledgeSourcesFromGithub(); // links for download
-  const files = await fetchAndParseGithubFiles(sources); // parsed contents
+  const files = await fetchAndParseGithubFiles(sources); // parsed all contents of a file
 
-  let totalChunks = 0;
+  // returns array of strings of file names in github repo
+  const currentGitHubFiles = files
+    .map((f) => {
+      const nameMatch = f.match(/^\[(.*?)\]/); // a capture group, returns e.g. ["[guide.md]", "guide.md"]
+      return nameMatch?.[1]?.trim(); // return only the string file name e.g. "guide.md"
+    })
+    .filter(Boolean); // removes falsy values (e.g. undefined)
+
+  // returns array of strings of file names in neondb
+  const dbFiles = await getAllStoredFileNames();
+
+  const deletedFiles = dbFiles.filter(
+    (file) => !currentGitHubFiles.includes(file)
+  ); // selects files to delete
+
+  // deletes file
+  for (const deleted of deletedFiles) {
+    await deleteVectorChunk(deleted);
+    console.log(`🗑️ Deleted all chunks for removed file: ${deleted}`);
+  }
+
+  let totalChunks = 0; // total re-embedded chunks
 
   for (let fileText of files) {
     fileText = fileText.trim();
@@ -56,7 +77,7 @@ export async function loadAndEmbedKnowledge() {
     }
 
     const chunks = splitIntoChunks(content);
-    await deleteVectorChunk(name) // deletes all chunks of a changed file
+    await deleteVectorChunk(name); // deletes all chunks of a changed file
 
     for (const chunk of chunks) {
       const labeledChunk = `[${name}]\n${chunk}`;
@@ -78,7 +99,7 @@ export async function loadAndEmbedKnowledge() {
     totalChunks += chunks.length;
   }
 
-  // LOG
+  // LOGS
   console.log("📚 Embedded", embeddedChunks.length, "total chunks.");
   if (totalChunks === 0) {
     console.log("✅ All files are up to date — no re-embedding needed.");
@@ -86,6 +107,7 @@ export async function loadAndEmbedKnowledge() {
     console.log(`📥 Total re-embedded chunks: ${totalChunks}`);
   }
 
+  // if true, from initializeBotData(), "WALL-E is now online. 🤖" is sent to bot channel
   return true;
 }
 

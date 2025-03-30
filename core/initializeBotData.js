@@ -17,5 +17,5 @@ export async function initializeBotData(client, safeMode) {
   setInterval(async () => {
     await loadAndEmbedKnowledge();
     console.log("🔄 Knowledge re-embedded from GitHub.");
-  }, 10 * 60 * 1000);
+  }, 10 * 60 * 1000); // 10min interval
 }

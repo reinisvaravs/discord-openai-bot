@@ -78,4 +78,10 @@ export async function storeFileHash(filename, hash) {
   );
 }
 
+// gets file names from neondb
+export async function getAllStoredFileNames() {
+  const res = await pool.query("SELECT DISTINCT file_name FROM vectors"); // returns array of jsons
+  return res.rows.map((r) => r.file_name); // returns array of strings of file names
+}
+
 export default pool;
