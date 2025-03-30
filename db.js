@@ -15,9 +15,10 @@ export async function getChannelId(type) {
   return result.rows[0]?.value;
 }
 
-// deletes all chunks of a changed file
+// deletes all chunks and vectors of a changed file
 export async function deleteVectorChunk(fileName) {
   await pool.query(`DELETE FROM vectors WHERE file_name = $1`, [fileName]);
+  await pool.query(`DELETE FROM file_hashes WHERE file_name = $1`, [fileName]);
 }
 
 // saves chunks to db

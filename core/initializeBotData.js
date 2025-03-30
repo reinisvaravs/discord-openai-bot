@@ -3,7 +3,6 @@ import { getChannelId } from "../db.js";
 
 export async function initializeBotData(client, safeMode) {
   const success = await loadAndEmbedKnowledge();
-  console.log("✅ Initial knowledge embedding complete.");
 
   if (success) {
     const channelId = await getChannelId(`${safeMode}_channel_id`);
@@ -16,6 +15,6 @@ export async function initializeBotData(client, safeMode) {
   // check knowledge for changes
   setInterval(async () => {
     await loadAndEmbedKnowledge();
-    console.log("🔄 Knowledge re-embedded from GitHub.");
+    console.log("[github check]");
   }, 10 * 60 * 1000); // 10min interval
 }

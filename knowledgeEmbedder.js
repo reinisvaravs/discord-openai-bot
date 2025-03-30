@@ -37,7 +37,7 @@ function splitIntoChunks(text, maxTokens = 500) {
 // check for changes in vectors
 export async function loadAndEmbedKnowledge() {
   embeddedChunks = await loadAllVectors(); // prev vectors from db
-  console.log(`📦 Loaded ${embeddedChunks.length} chunks from PostgreSQL`);
+  // console.log(`📦 Chunks in database: ${embeddedChunks.length}`);
 
   // GitHub fetch for new/updated files
   const sources = await getKnowledgeSourcesFromGithub(); // links for download
@@ -46,7 +46,7 @@ export async function loadAndEmbedKnowledge() {
   // returns array of strings of file names in github repo
   const currentGitHubFiles = files
     .map((f) => {
-      const nameMatch = f.match(/^\[(.*?)\]/); // a capture group, returns e.g. ["[guide.md]", "guide.md"]
+      const nameMatch = f.match(/\[(.*?)\]/); // a capture group, returns e.g. ["[guide.md]", "guide.md"]
       return nameMatch?.[1]?.trim(); // return only the string file name e.g. "guide.md"
     })
     .filter(Boolean); // removes falsy values (e.g. undefined)
@@ -58,7 +58,7 @@ export async function loadAndEmbedKnowledge() {
     (file) => !currentGitHubFiles.includes(file)
   ); // selects files to delete
 
-  // deletes file
+  // deletes selected files
   for (const deleted of deletedFiles) {
     await deleteVectorChunk(deleted);
     console.log(`🗑️ Deleted all chunks for removed file: ${deleted}`);
@@ -73,7 +73,7 @@ export async function loadAndEmbedKnowledge() {
     const content = fileText.slice(nameMatch[0].length).trim();
 
     if (!(await hasFileChanged(name, content))) {
-      console.log(`⚪ Skipped unchanged file: ${name}`); // if no changed in file
+      // console.log(`[Skipped: ${name}]`); // if no changed in file
       continue; // stops the current iteration, moves on to next
     }
 
@@ -101,7 +101,6 @@ export async function loadAndEmbedKnowledge() {
   }
 
   // LOGS
-  console.log("📚 Embedded", embeddedChunks.length, "total chunks.");
   if (totalChunks === 0) {
     console.log("✅ All files are up to date — no re-embedding needed.");
   } else {

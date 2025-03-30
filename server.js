@@ -49,7 +49,7 @@ const openai = new OpenAI({
 
 // Ready event
 client.on("ready", () => {
-  console.log("✅ WALL-E is online");
+  console.log("[WALL-E is online]");
 });
 
 // Prepare shared refs

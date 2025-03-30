@@ -1,4 +1,5 @@
 import pool from "../db.js";
+import { loadAndEmbedKnowledge } from "../knowledgeEmbedder.js";
 
 export async function handleAdminCommands(
   message,
@@ -31,16 +32,11 @@ export async function handleAdminCommands(
   else if (content === "!refresh") {
     if (!hasAllowedRole(message)) return;
 
-    console.log("🔁 Admin triggered !refresh");
-    console.log("🔍 Checking for updated GitHub files...");
+    console.log("Checking for updated GitHub files...");
 
-    refreshFn()
-      .then((newCache) => {
-        console.log("✅ Refresh complete. Updated chunks are now live.");
-        combinedInfoCacheRef.value = newCache;
-        message.reply(
-          "🔁 Knowledge refreshed from GitHub (only changed files re-embedded)."
-        );
+    loadAndEmbedKnowledge()
+      .then(() => {
+        message.reply("🔁 Knowledge refreshed.");
       })
       .catch((err) => {
         console.error("❌ Error during refresh:", err);
