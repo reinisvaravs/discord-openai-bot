@@ -4,11 +4,13 @@ import rateLimit from "express-rate-limit";
 export function createRemoteRouter(client) {
   const router = express.Router();
 
+  // 5/min limit
   const remoteLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 5,
-  });
+  }); 
 
+  // root /send-remote
   router.post("/", remoteLimiter, express.json(), async (req, res) => {
     console.log("[remote message sent]");
     const { message, channelId, password } = req.body;

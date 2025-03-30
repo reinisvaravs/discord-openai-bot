@@ -24,6 +24,7 @@ export async function saveVectorChunk(fileName, chunk, embedding) {
   );
 }
 
+// gets chunk vectors form db
 export async function loadAllVectors() {
   const result = await pool.query(
     "SELECT file_name, chunk, embedding FROM vectors"
@@ -34,6 +35,7 @@ export async function loadAllVectors() {
   }));
 }
 
+// finds similar chunks of info to message in postgreSQL
 export async function findSimilarChunks(messageEmbedding, topN = 4) {
   const vectorString = `[${messageEmbedding.join(",")}]`; // PostgreSQL vector format
 

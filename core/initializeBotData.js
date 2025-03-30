@@ -13,6 +13,7 @@ export async function initializeBotData(client, safeMode) {
     }
   }
 
+  // check knowledge for changes
   setInterval(async () => {
     await loadAndEmbedKnowledge();
     console.log("🔄 Knowledge re-embedded from GitHub.");

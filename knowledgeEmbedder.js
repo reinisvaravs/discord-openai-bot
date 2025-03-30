@@ -10,6 +10,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 let embeddedChunks = []; // stores: [{ string chunk, vector }]
 
+// splits into 500 token chunks
 function splitIntoChunks(text, maxTokens = 500) {
   const sentences = text.split(/\.\s+/); // splits on periods followed by space
   const chunks = [];
@@ -27,14 +28,15 @@ function splitIntoChunks(text, maxTokens = 500) {
   return chunks;
 }
 
+// check for changes in vectors
 export async function loadAndEmbedKnowledge() {
   embeddedChunks = await loadAllVectors(); // prev vectors from db
 
   console.log(`📦 Loaded ${embeddedChunks.length} chunks from PostgreSQL`);
 
   // GitHub fetch for new/updated files
-  const sources = await getKnowledgeSourcesFromGithub();
-  const files = await fetchAndParseGithubFiles(sources);
+  const sources = await getKnowledgeSourcesFromGithub(); // links for download
+  const files = await fetchAndParseGithubFiles(sources); // parsed contents
 
   let totalChunks = 0;
 
@@ -45,7 +47,7 @@ export async function loadAndEmbedKnowledge() {
     const content = fileText.slice(nameMatch[0].length).trim();
 
     if (!(await hasFileChanged(name, content))) {
-      console.log(`⚪ Skipped unchanged file: ${name}`);
+      console.log(`⚪ Skipped unchanged file: ${name}`); // if no changed in file
       continue;
     }
 
@@ -82,6 +84,7 @@ export async function loadAndEmbedKnowledge() {
   return true;
 }
 
+// finds similar chunks of info to message
 export async function getRelevantChunksForMessage(message, topK = 4) {
   const res = await openai.embeddings.create({
     input: message,
