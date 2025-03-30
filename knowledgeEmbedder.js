@@ -123,14 +123,14 @@ export async function loadAndEmbedKnowledge() {
 }
 
 // finds similar chunks of info to message
-export async function getRelevantChunksForMessage(message, topK = 4) {
+export async function getRelevantChunksForMessage(message, topK) {
   const res = await openai.embeddings.create({
     input: message,
     model: "text-embedding-3-small",
   });
 
   const messageVector = res.data[0].embedding;
-  const topChunks = await findSimilarChunks(messageVector, topK);
+  const topChunks = await findSimilarChunks(messageVector, topK = 2);
 
   console.log("📊 SQL Similarity Match Summary");
   console.log("🔍 User Question:", message);
