@@ -130,18 +130,7 @@ export async function getRelevantChunksForMessage(message, topK) {
   });
 
   const messageVector = res.data[0].embedding;
-  const topChunks = await findSimilarChunks(messageVector, topK = 4);
-
-  console.log("📊 SQL Similarity Match Summary");
-  console.log("🔍 User Question:", message);
-  console.log("📦 Top Matches:");
-
-  topChunks.forEach((c, i) => {
-    const preview = c.chunk.slice(0, 200).replace(/\n+/g, " ").trim();
-    const filename = c.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
-    console.log(`#${i + 1}  [score: ${c.score.toFixed(4)}]  (${filename})`);
-    console.log("📄 Preview:", preview);
-  });
+  const topChunks = await findSimilarChunks(messageVector, (topK = 4));
 
   global.lastUsedChunks = topChunks;
   return topChunks.map((c) => c.chunk);

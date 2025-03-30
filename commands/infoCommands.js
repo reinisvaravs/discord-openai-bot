@@ -6,7 +6,15 @@ export async function handleInfoCommands(message, lastUsedChunks) {
       return message.reply("ℹ️ No files were used yet.");
     }
 
-    const filenames = lastUsedChunks
+    const filteredFileRefs = lastUsedChunks.filter((c) => c.score <= -0.4);
+
+    if (filteredFileRefs.length === 0) {
+      return message.reply(
+        "⚠️ No highly relevant sources found (score ≤ 4.0 🔴)."
+      );
+    }
+
+    const filenames = filteredFileRefs
       .map((entry) => entry.chunk.match(/^\[(.*?)\]/)?.[1])
       .filter(Boolean);
 
@@ -27,17 +35,23 @@ export async function handleInfoCommands(message, lastUsedChunks) {
 
     if (filteredChunks.length === 0) {
       return message.reply(
-        "⚠️ No highly relevant sources found (score ≤ -0.4)."
+        "⚠️ No highly relevant sources found (score ≤ 4.0 🔴)."
       );
     }
 
     for (const [i, result] of filteredChunks.entries()) {
       const preview = result.chunk.slice(0, 1000).replace(/\n+/g, " ").trim();
       const filename = result.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
-      const score = result.score.toFixed(4);
+      const normalizedScore = (Math.abs(result.score) * 10).toFixed(1);
+
+      let emoji = "🟢";
+      if (normalizedScore < 6.0) emoji = "🟡";
+      if (normalizedScore < 4.0) emoji = "🔴";
 
       await message.reply(
-        `🔍 #${i + 1} from **${filename}** (score: ${score}):\n${preview}`
+        `🔍 #${
+          i + 1
+        } from **${filename}** (relevance: ${emoji} ${normalizedScore}/10):\n${preview}`
       );
     }
   }
