@@ -171,6 +171,8 @@ npm start
 
 ## 🧭 Upcoming Features
 
+🟡 React.js dashboard
+
 🟡 Change model with admin command. Store model name in a database.
 
 ---

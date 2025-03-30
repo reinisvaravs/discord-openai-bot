@@ -58,4 +58,3 @@ async function fetchStatus() {
 }
 
 fetchStatus();
-setInterval(fetchStatus, 10000); // auto-update every 10s
