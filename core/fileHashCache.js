@@ -14,7 +14,3 @@ export async function hasFileChanged(filename, content) {
 
   return isChanged;
 }
-
-export function resetFileHashCache() {
-  fileHashCache.clear();
-}

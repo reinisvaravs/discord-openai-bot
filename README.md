@@ -171,7 +171,8 @@ npm start
 
 ## 🧭 Upcoming Features
 
-🟡 User-specific context memory (thread/session-based)
+🟡 Change model with admin command. Store model name in a database.
+🟡 Dashboard with statuses
 
 ---
 

@@ -1,5 +1,4 @@
 import pool from "../db.js";
-import { resetFileHashCache } from "../core/fileHashCache.js";
 
 export async function handleAdminCommands(
   message,
@@ -31,8 +30,6 @@ export async function handleAdminCommands(
   // manual knowledge refresh
   else if (content === "!refresh") {
     if (!hasAllowedRole(message)) return;
-
-    resetFileHashCache(); // Clear previous hashes
 
     refreshFn().then((newCache) => {
       combinedInfoCacheRef.value = newCache;
