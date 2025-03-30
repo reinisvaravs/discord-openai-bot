@@ -48,7 +48,7 @@ export async function loadAllVectors() {
 }
 
 // finds similar chunks of info to message in postgreSQL
-export async function findSimilarChunks(messageEmbedding, topN = 4) {
+export async function findSimilarChunks(messageEmbedding, topN) {
   const vectorString = `[${messageEmbedding.join(",")}]`; // PostgreSQL vector format
 
   const result = await pool.query(

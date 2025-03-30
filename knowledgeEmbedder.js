@@ -130,7 +130,7 @@ export async function getRelevantChunksForMessage(message, topK) {
   });
 
   const messageVector = res.data[0].embedding;
-  const topChunks = await findSimilarChunks(messageVector, topK = 2);
+  const topChunks = await findSimilarChunks(messageVector, topK = 4);
 
   console.log("📊 SQL Similarity Match Summary");
   console.log("🔍 User Question:", message);
