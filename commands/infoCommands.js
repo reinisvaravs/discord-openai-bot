@@ -1,4 +1,3 @@
-
 export async function handleInfoCommands(message, lastUsedChunks) {
   const content = message.content.trim();
 
@@ -24,7 +23,15 @@ export async function handleInfoCommands(message, lastUsedChunks) {
       return message.reply("ℹ️ No chunks were used yet.");
     }
 
-    for (const [i, result] of lastUsedChunks.entries()) {
+    const filteredChunks = lastUsedChunks.filter((c) => c.score <= -0.4);
+
+    if (filteredChunks.length === 0) {
+      return message.reply(
+        "⚠️ No highly relevant sources found (score ≤ -0.4)."
+      );
+    }
+
+    for (const [i, result] of filteredChunks.entries()) {
       const preview = result.chunk.slice(0, 1000).replace(/\n+/g, " ").trim();
       const filename = result.chunk.match(/^\[(.*?)\]/)?.[1] || "unknown_file";
       const score = result.score.toFixed(4);
