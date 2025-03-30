@@ -1,5 +1,5 @@
-const API_BASE_URL = "https://discord-openai-bot-0vmd.onrender.com";
-// const API_BASE_URL = "http://localhost:3000";
+// const API_BASE_URL = "https://discord-openai-bot-0vmd.onrender.com";
+const API_BASE_URL = "http://localhost:3000";
 
 document.getElementById("sendBtn").onclick = async () => {
   const message = document.getElementById("message").value;
@@ -35,6 +35,7 @@ async function fetchStatus() {
 
     const text = `
       <div class="statusDiv">
+        <h3>System Status</h3>
         <p>Status: ${data.status}</p>
         <p>Mode: ${
           data.mode === "prod"

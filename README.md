@@ -172,7 +172,6 @@ npm start
 ## 🧭 Upcoming Features
 
 🟡 Change model with admin command. Store model name in a database.
-🟡 Dashboard with statuses
 
 ---
 
