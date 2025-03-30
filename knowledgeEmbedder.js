@@ -31,7 +31,6 @@ function splitIntoChunks(text, maxTokens = 500) {
 // check for changes in vectors
 export async function loadAndEmbedKnowledge() {
   embeddedChunks = await loadAllVectors(); // prev vectors from db
-
   console.log(`📦 Loaded ${embeddedChunks.length} chunks from PostgreSQL`);
 
   // GitHub fetch for new/updated files
