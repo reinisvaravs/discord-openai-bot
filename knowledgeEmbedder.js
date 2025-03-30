@@ -4,7 +4,12 @@ import {
   getKnowledgeSourcesFromGithub, // downloads and parses file content into a big string
 } from "./githubFileLoader.js";
 import { hasFileChanged } from "./core/fileHashCache.js";
-import { saveVectorChunk, loadAllVectors, findSimilarChunks } from "./db.js";
+import {
+  saveVectorChunk,
+  loadAllVectors,
+  findSimilarChunks,
+  deleteVectorChunk,
+} from "./db.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
@@ -47,10 +52,11 @@ export async function loadAndEmbedKnowledge() {
 
     if (!(await hasFileChanged(name, content))) {
       console.log(`⚪ Skipped unchanged file: ${name}`); // if no changed in file
-      continue;
+      continue; // stops the current iteration, moves on to next
     }
 
     const chunks = splitIntoChunks(content);
+    await deleteVectorChunk(name) // deletes all chunks of a changed file
 
     for (const chunk of chunks) {
       const labeledChunk = `[${name}]\n${chunk}`;
@@ -67,7 +73,7 @@ export async function loadAndEmbedKnowledge() {
         vector,
       });
 
-      await saveVectorChunk(name, labeledChunk, vector); // saves to db
+      await saveVectorChunk(name, labeledChunk, vector); // saves the chunks to db
     }
     totalChunks += chunks.length;
   }

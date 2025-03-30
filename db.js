@@ -15,6 +15,12 @@ export async function getChannelId(type) {
   return result.rows[0]?.value;
 }
 
+// deletes all chunks of a changed file
+export async function deleteVectorChunk(fileName) {
+  await pool.query(`DELETE FROM vectors WHERE file_name = $1`, [fileName]);
+}
+
+// saves chunks to db
 export async function saveVectorChunk(fileName, chunk, embedding) {
   const vectorString = `[${embedding.join(",")}]`; // Converts JS array to PostgreSQL vector string
   await pool.query(
@@ -22,6 +28,7 @@ export async function saveVectorChunk(fileName, chunk, embedding) {
      VALUES ($1, $2, $3::vector)`,
     [fileName, chunk, vectorString]
   );
+  console.log("[updating]: ", fileName);
 }
 
 // gets chunk vectors form db

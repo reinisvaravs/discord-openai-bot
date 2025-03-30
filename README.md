@@ -1,11 +1,11 @@
-# 🤖 WALL-E — Discord AI Knowledge Assistant
+# 🤖🤖🤖 WALL-E — Discord AI Knowledge Assistant
 
 ![Node.js](https://img.shields.io/badge/Node.js-22.x-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Powered by](https://img.shields.io/badge/Powered_by-GPT_3.5-orange)
 ![Status](https://img.shields.io/badge/status-live-success)
 
-WALL-E is an intelligent Discord bot built with Node.js and OpenAI. It answers questions using embedded knowledge from structured documents stored in a GitHub repository. The bot is designed to coach OnlyFans creators using internal training content managed by a company called **Wunder**.
+WALL-E is an intelligent Discord bot built with Node.js and OpenAI. It answers questions using embedded knowledge from structured documents stored in a GitHub repository.
 
 Built for maintainability, transparency, and flexibility.
 
