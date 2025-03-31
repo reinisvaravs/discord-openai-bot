@@ -16,9 +16,8 @@ import {
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 let embeddedChunks = []; // stores: [{ string chunk, vector }]
-
-// splits into 500 token chunks
-function splitIntoChunks(text, maxTokens = 500) {
+// splits into 250 token chunks
+function splitIntoChunks(text, maxTokens = 150) {
   const sentences = text.split(/\.\s+/); // splits on periods followed by space
   const chunks = [];
   let current = "";
@@ -123,14 +122,15 @@ export async function loadAndEmbedKnowledge() {
 }
 
 // finds similar chunks of info to message
-export async function getRelevantChunksForMessage(message, topK) {
+export async function getRelevantChunksForMessage(message, topK = 13) {
   const res = await openai.embeddings.create({
     input: message,
     model: "text-embedding-3-small",
   });
 
   const messageVector = res.data[0].embedding;
-  const topChunks = await findSimilarChunks(messageVector, (topK = 4));
+  const topChunks = await findSimilarChunks(messageVector, topK);
+  // these are sent to openAI as prompt
 
   global.lastUsedChunks = topChunks;
   return topChunks.map((c) => c.chunk);

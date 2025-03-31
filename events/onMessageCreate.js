@@ -73,9 +73,9 @@ export async function onMessageCreate({
     }
   }, 9000);
 
-  // gets top 4 relevant chunks of info
+  // gets top 8 relevant chunks of info
   const relevantChunks = await getRelevantChunksForMessage(message.content);
-  // initial system prompt + the 4 relevant chunks of info
+  // initial system prompt + the 8 relevant chunks of info
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
   // system prompt + history
@@ -111,7 +111,7 @@ export async function onMessageCreate({
   if (responseMessage.length <= chunkSizeLimit) {
     await message.reply(responseMessage);
     addToMessageHistory("assistant", "WALL-E", responseMessage);
-  } 
+  }
   // if over 2000 char, splits the message into parts and sends multiple messages
   else {
     for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {

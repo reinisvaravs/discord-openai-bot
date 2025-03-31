@@ -39,7 +39,7 @@ export async function handleInfoCommands(message, lastUsedChunks) {
       );
     }
 
-    for (const [i, result] of filteredChunks.entries()) {
+    for (const [i, result] of filteredChunks.slice(0, 4).entries()) {
       const preview =
         result.chunk
           .trimStart()
