@@ -57,13 +57,15 @@ export async function onMessageCreate({
   // stop if info command
   if (infoWasHandled || !toggleBotRef.value) return;
 
-  // ads message to history
+  // save to history
   if (!message.content.startsWith(IGNORE_PREFIX)) {
-    addToMessageHistory("user", message.author.username, message.content);
+    addToMessageHistory(
+      message.author.id, // userId (used as memory key)
+      "user",
+      message.author.username,
+      message.content
+    );
   }
-
-  // ignore messages with !
-  if (message.content.startsWith(IGNORE_PREFIX)) return;
 
   // typing animation cycle
   sendTypingAnimation(message);
@@ -81,7 +83,7 @@ export async function onMessageCreate({
   // system prompt + history
   const conversation = [
     { role: "system", content: systemPrompt },
-    ...getFormattedHistory(),
+    ...getFormattedHistory(message.author.id),
   ];
 
   // fetches openAI response
@@ -110,7 +112,12 @@ export async function onMessageCreate({
   // if below 2000 char, sends the message
   if (responseMessage.length <= chunkSizeLimit) {
     await message.reply(responseMessage);
-    addToMessageHistory("assistant", "WALL-E", responseMessage);
+    addToMessageHistory(
+      message.author.id, // user ID to track separate histories
+      "assistant",
+      "WALL-E",
+      responseMessage // bot's reply
+    );
   }
   // if over 2000 char, splits the message into parts and sends multiple messages
   else {

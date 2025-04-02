@@ -1,21 +1,33 @@
-const messageHistory = [];
-const MAX_HISTORY = 5;
+// Stores conversation history separately for each user by their Discord user ID
+const messageHistories = new Map(); // userId -> array of { role, name, content }
 
-export function addToMessageHistory(role, name, content) {
-  messageHistory.push({ role, name, content });
-  if (messageHistory.length > MAX_HISTORY) {
-    messageHistory.shift();
+const MAX_HISTORY = 20; // maximum messages to remember per user
+
+// Adds a message to a specific user's history
+export function addToMessageHistory(userId, role, name, content) {
+  if (!messageHistories.has(userId)) {
+    messageHistories.set(userId, []);
+  }
+
+  const history = messageHistories.get(userId);
+  history.push({ role, name, content });
+
+  // Remove the oldest message if we exceed the max history limit
+  if (history.length > MAX_HISTORY) {
+    history.shift();
   }
 }
 
-export function getFormattedHistory() {
-  return messageHistory.map((msg) => ({
+// Returns the formatted message history for a specific user
+export function getFormattedHistory(userId) {
+  return (messageHistories.get(userId) || []).map((msg) => ({
     role: msg.role,
     name: msg.name,
     content: msg.content,
   }));
 }
 
-export function resetHistory() {
-  messageHistory.length = 0;
+// Clears all memory for a given user (e.g. for "!reset" command)
+export function resetHistory(userId) {
+  messageHistories.delete(userId);
 }
