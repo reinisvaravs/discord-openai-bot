@@ -1,17 +1,50 @@
 import pool from "../db.js";
 import { loadAndEmbedKnowledge } from "../knowledgeEmbedder.js";
+import { resetHistory } from "../core/messageMemory.js";
+import { hasAllowedRole } from "../core/permissions.js";
 
 export async function handleAdminCommands(
   message,
-  combinedInfoCacheRef,
-  refreshFn,
   toggleBotRef,
   allowedChannelIdRef,
-  hasAllowedRole,
   client,
   safeMode
 ) {
   const content = message.content.trim();
+
+  // reset another user's memory by userId
+  if (message.content.startsWith("!reset ")) {
+    if (!(await hasAllowedRole(message))) {
+      await message.reply(
+        "❌ You do not have permission to reset other users."
+      );
+      return true;
+    }
+
+    const userId = message.content.split(" ")[1]?.trim();
+
+    if (!userId || !/^\d+$/.test(userId)) {
+      await message.reply(
+        "⚠️ Please provide a valid numeric user ID. Example:\n`!reset 123456789012345678`"
+      );
+      return true;
+    }
+
+    await resetHistory(userId);
+
+    try {
+      const user = await message.guild.members.fetch(userId);
+      const username = user.user.username;
+      await message.reply(`✅ Reset memory for **${username}** (${userId})`);
+    } catch (err) {
+      console.warn("⚠️ Couldn't resolve user from ID:", userId);
+      await message.reply(
+        `✅ Reset memory for user ID: \`${userId}\`\n⚠️ (Username not found — they might have left the server)`
+      );
+    }
+
+    return true;
+  }
 
   // turns bot off
   if (content === "!bot off") {

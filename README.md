@@ -7,8 +7,6 @@
 
 WALL-E is an intelligent Discord bot built with Node.js and OpenAI. It answers questions using embedded knowledge from structured documents stored in a GitHub repository.
 
-Built for maintainability, transparency, and flexibility.
-
 ---
 
 <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdWtqa3lxbGIyeTJjZTNvMDF0MmszaDdzcWNpNjV1a3B5N2R3ajBtMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iGJNOadhvBMuk/giphy.gif" width="500" alt="WALL-E in real life">
@@ -50,8 +48,11 @@ Built for maintainability, transparency, and flexibility.
 
 - ✅ **Memory**
 
-  - Keeps up to 5 recent messages in memory for context
-  - Does not store long-term history (stateless between restarts)
+  - Stores the latest 20 messages per user in **PostgreSQL**
+  - Maintains contextual replies even across restarts
+  - Memory is separated per user, even in shared channels
+  - Users can clear their memory using `!reset`
+  - Admins can clear memory for others using `!reset <userId>`
 
 - ✅ **Admin Controls (prefix-based)**
 
@@ -60,6 +61,7 @@ Built for maintainability, transparency, and flexibility.
   - `!source` — show which embedded chunks were used in the last GPT answer
   - `!files` — show filenames used in the last GPT reply
   - `!change channel to <channelId>` — move WALL-E to a new channel
+  - `!reset <userId>` — reset any user's memory (admin-only)
 
 - ✅ **Custom Personality (System Prompt)**
 
@@ -159,21 +161,11 @@ npm start
 - Stores results in a PostgreSQL table with `pgvector`
 - Top 4 matched chunks are retrieved using vector similarity for GPT replies
 
----
-
-## 🧪 Testing
-
-- Run `!refresh` in Discord to force a full re-embed
-- Check logs to see whether a file was re-embedded or skipped due to no changes
-- Use `!source` and `!files` to see what content was used
-
----
-
 ## 🧭 Upcoming Features
 
-🟡 React.js dashboard
-
-🟡 Change model with admin command. Store model name in a database.
+🟡 User-level analytics and usage logging  
+🟡 Admin dashboard to monitor stored memory and token usage  
+🟡 GPT-4 model switching from within Discord
 
 ---
 

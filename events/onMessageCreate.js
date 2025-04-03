@@ -83,7 +83,7 @@ export async function onMessageCreate({
   // system prompt + history
   const conversation = [
     { role: "system", content: systemPrompt },
-    ...getFormattedHistory(message.author.id),
+    ...(await getFormattedHistory(message.author.id)), // must be async cuz it talks to db
   ];
 
   // fetches openAI response

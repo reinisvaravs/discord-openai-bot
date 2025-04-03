@@ -1,6 +1,15 @@
+import { resetHistory } from "../core/messageMemory.js";
+
 export async function handleInfoCommands(message, lastUsedChunks) {
   const content = message.content.trim();
 
+  // Check if user wants to reset their own memory
+  if (message.content.trim() === "!reset") {
+    await resetHistory(message.author.id); // remove user's history from db
+    return message.reply("🧠 Your conversation history has been reset.");
+  }
+
+  // gets relevant files for the request (not the response)
   if (content === "!files") {
     if (!lastUsedChunks || lastUsedChunks.length === 0) {
       return message.reply("ℹ️ No files were used yet.");
@@ -26,6 +35,7 @@ export async function handleInfoCommands(message, lastUsedChunks) {
     );
   }
 
+  // gets relevant sources for the request (not the response)
   if (content === "!source") {
     if (!lastUsedChunks || lastUsedChunks.length === 0) {
       return message.reply("ℹ️ No chunks were used yet.");

@@ -1,33 +1,63 @@
-// Stores conversation history separately for each user by their Discord user ID
-const messageHistories = new Map(); // userId -> array of { role, name, content }
+import pool from "../db.js";
 
-const MAX_HISTORY = 20; // maximum messages to remember per user
+const MAX_HISTORY = 20; // how many messages to keep in memory per user
 
-// Adds a message to a specific user's history
-export function addToMessageHistory(userId, role, name, content) {
-  if (!messageHistories.has(userId)) {
-    messageHistories.set(userId, []);
-  }
+// Loads conversation history for a given user from DB
+// this is sent to gpt each req
+export async function getFormattedHistory(userId) {
+  try {
+    const result = await pool.query(
+      "SELECT memory FROM user_memory WHERE user_id = $1",
+      [userId]
+    );
 
-  const history = messageHistories.get(userId);
-  history.push({ role, name, content });
-
-  // Remove the oldest message if we exceed the max history limit
-  if (history.length > MAX_HISTORY) {
-    history.shift();
+    const memory = result.rows[0]?.memory || [];
+    return memory;
+  } catch (err) {
+    console.error("❌ Failed to load memory for user:", userId, err);
+    return [];
   }
 }
 
-// Returns the formatted message history for a specific user
-export function getFormattedHistory(userId) {
-  return (messageHistories.get(userId) || []).map((msg) => ({
-    role: msg.role,
-    name: msg.name,
-    content: msg.content,
-  }));
+// Saves a new message to a user's memory (trims oldest if needed)
+export async function addToMessageHistory(userId, role, name, content) {
+  try {
+    // Get current history
+    const result = await pool.query(
+      "SELECT memory FROM user_memory WHERE user_id = $1",
+      [userId]
+    );
+
+    const history = result.rows[0]?.memory || [];
+
+    // Add the new message
+    history.push({ role, name, content });
+
+    // Trim if over limit
+    if (history.length > MAX_HISTORY) {
+      history.shift();
+    }
+
+    // Insert or update
+    await pool.query(
+      `
+      INSERT INTO user_memory (user_id, memory)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id)
+      DO UPDATE SET memory = EXCLUDED.memory
+      `,
+      [userId, JSON.stringify(history)]
+    );
+  } catch (err) {
+    console.error("❌ Failed to save message history for user:", userId, err);
+  }
 }
 
-// Clears all memory for a given user (e.g. for "!reset" command)
-export function resetHistory(userId) {
-  messageHistories.delete(userId);
+// Deletes a user's history (for "!reset" or admin use)
+export async function resetHistory(userId) {
+  try {
+    await pool.query("DELETE FROM user_memory WHERE user_id = $1", [userId]);
+  } catch (err) {
+    console.error("❌ Failed to reset history for user:", userId, err);
+  }
 }
