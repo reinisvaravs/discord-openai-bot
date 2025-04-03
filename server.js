@@ -11,6 +11,7 @@ import { onMessageCreate } from "./events/onMessageCreate.js";
 import { initializeBotData } from "./core/initializeBotData.js";
 import { createRemoteRouter } from "./routes/remoteRouter.js";
 import { statusRouter } from "./routes/statusRouter.js";
+import adminRouter from "./routes/adminRouter.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(
       "http://localhost:3000",
       "https://discord-openai-bot-0vmd.onrender.com",
       "https://reinisvaravs.com",
+      "http://localhost:5173",
     ],
   })
 );
@@ -89,6 +91,8 @@ app.use(
 
 // Remote HTTP control route
 app.use("/send-remote", createRemoteRouter(client));
+
+app.use("/api/admin", adminRouter);
 
 // Login to Discord
 client.login(process.env.TOKEN);

@@ -163,9 +163,7 @@ npm start
 
 ## 🧭 Upcoming Features
 
-🟡 User-level analytics and usage logging  
-🟡 Admin dashboard to monitor stored memory and token usage  
-🟡 GPT-4 model switching from within Discord
+🟡 all done
 
 ---
 

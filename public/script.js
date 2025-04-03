@@ -58,3 +58,43 @@ async function fetchStatus() {
 }
 
 fetchStatus();
+
+document
+  .getElementById("fetchMemoryBtn")
+  .addEventListener("click", async () => {
+    const userId = document.getElementById("userIdInput").value.trim();
+    const outputDiv = document.getElementById("memoryOutput");
+
+    if (!userId) {
+      outputDiv.innerText = "Please enter a user ID.";
+      return;
+    }
+
+    outputDiv.innerText = "Loading...";
+
+    try {
+      const response = await fetch(`/api/admin/memory/${userId}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        outputDiv.innerText = "Failed to fetch memory.";
+        return;
+      }
+
+      if (!data.memory.length) {
+        outputDiv.innerText = "No memory found for this user.";
+        return;
+      }
+
+      // Format and display memory messages
+      outputDiv.innerHTML = data.memory
+        .map(
+          (msg) =>
+            `<p><strong>${msg.role}</strong> (${msg.name}): ${msg.content}</p>`
+        )
+        .join("");
+    } catch (err) {
+      console.error(err);
+      outputDiv.innerText = "Error fetching memory.";
+    }
+  });
