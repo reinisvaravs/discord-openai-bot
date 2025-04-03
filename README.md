@@ -163,7 +163,7 @@ npm start
 
 ## 🧭 Upcoming Features
 
-🟡 all done
+🟡 admin dashboard using react, tailwind, axios
 
 ---
 
