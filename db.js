@@ -91,4 +91,20 @@ export async function getAllStoredFileNames() {
   return res.rows.map((r) => r.file_name); // returns array of strings of file names
 }
 
+export async function getConfigValue(key) {
+  const result = await pool.query(
+    "SELECT value FROM bot_config WHERE key = $1",
+    [key]
+  );
+  return result.rows[0]?.value || null;
+}
+
+export async function setConfigValue(key, value) {
+  await pool.query(
+    `INSERT INTO bot_config (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [key, value]
+  );
+}
+
 export default pool;

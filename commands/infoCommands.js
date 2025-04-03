@@ -3,10 +3,18 @@ import { resetHistory } from "../core/messageMemory.js";
 export async function handleInfoCommands(message, lastUsedChunks) {
   const content = message.content.trim();
 
+  // Show the current GPT model in use
+  if (content === "!model") {
+    const model = (await getConfigValue("gpt_model")) || "gpt-3.5-turbo";
+    await message.reply(`🤖 Currently using model: \`${model}\``);
+    return true;
+  }
+
   // Check if user wants to reset their own memory
   if (message.content.trim() === "!reset") {
     await resetHistory(message.author.id); // remove user's history from db
-    return message.reply("🧠 Your conversation history has been reset.");
+    message.reply("🧠 Your conversation history has been reset.");
+    return true;
   }
 
   // gets relevant files for the request (not the response)
@@ -29,10 +37,11 @@ export async function handleInfoCommands(message, lastUsedChunks) {
 
     const uniqueFilenames = [...new Set(filenames)];
 
-    return message.reply(
+    message.reply(
       `📁 Most recent knowledge sources:\n` +
         uniqueFilenames.map((name) => `• ${name}`).join("\n")
     );
+    return true;
   }
 
   // gets relevant sources for the request (not the response)
@@ -70,5 +79,6 @@ export async function handleInfoCommands(message, lastUsedChunks) {
         } from **${filename}** (relevance: ${emoji} ${normalizedScore}/10):\n${preview}`
       );
     }
+    return true;
   }
 }

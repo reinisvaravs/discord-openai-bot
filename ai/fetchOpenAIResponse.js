@@ -1,15 +1,13 @@
 import { setTimeout as wait } from "node:timers/promises";
 
-const GPT_MODEL = "gpt-3.5-turbo";
-
-export async function fetchOpenAIResponse(openai, messages) {
+export async function fetchOpenAIResponse(openai, messages, selectedModel) {
   let retries = 2;
   let delay = 5000;
 
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
       return await openai.chat.completions.create({
-        model: GPT_MODEL,
+        model: selectedModel,
         messages,
       });
     } catch (err) {

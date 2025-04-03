@@ -1,4 +1,4 @@
-import pool from "../db.js";
+import pool, { setConfigValue, getConfigValue } from "../db.js";
 import { loadAndEmbedKnowledge } from "../knowledgeEmbedder.js";
 import { resetHistory } from "../core/messageMemory.js";
 import { hasAllowedRole } from "../core/permissions.js";
@@ -11,6 +11,24 @@ export async function handleAdminCommands(
   safeMode
 ) {
   const content = message.content.trim();
+
+  if (content.startsWith("!set model ")) {
+    if (!hasAllowedRole(message)) return;
+
+    const model = content.split("!set model ")[1].trim();
+
+    // optionally validate against a known list of OpenAI models
+    const allowedModels = ["gpt-3.5-turbo", "gpt-4o"];
+    if (!allowedModels.includes(model)) {
+      return message.reply(
+        "⚠️ Invalid model. Choose one of: " + allowedModels.join(", ")
+      );
+    }
+
+    await setConfigValue("gpt_model", model);
+    message.reply(`✅ Model updated to **${model}**`);
+    return true;
+  }
 
   // reset another user's memory by userId
   if (message.content.startsWith("!reset ")) {
@@ -55,14 +73,15 @@ export async function handleAdminCommands(
   }
 
   // turns bot on
-  else if (content === "!bot on") {
+  if (content === "!bot on") {
     if (!hasAllowedRole(message)) return;
     toggleBotRef.value = true;
     message.reply("✅ WALL-E is back online.");
+    return true;
   }
 
   // manual knowledge refresh
-  else if (content === "!refresh") {
+  if (content === "!refresh") {
     if (!hasAllowedRole(message)) return;
 
     console.log("Checking for updated GitHub files...");
@@ -80,7 +99,7 @@ export async function handleAdminCommands(
   }
 
   // moves bot to a diff channel
-  else if (content.startsWith("!change channel to")) {
+  if (content.startsWith("!change channel to")) {
     if (!hasAllowedRole(message)) {
       return message.reply(
         "❌ You need the `Owner` or `Admin` role to use this command."

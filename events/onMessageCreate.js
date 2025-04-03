@@ -13,6 +13,7 @@ import {
 } from "../core/messageMemory.js";
 import { hasAllowedRole } from "../core/permissions.js";
 import { sendTypingAnimation } from "../core/typing.js";
+import { getConfigValue } from "../db.js";
 
 const IGNORE_PREFIX = "!";
 
@@ -87,7 +88,12 @@ export async function onMessageCreate({
   ];
 
   // fetches openAI response
-  const response = await fetchOpenAIResponse(openai, conversation);
+  const selectedModel = (await getConfigValue("gpt_model")) || "gpt-3.5-turbo"; // default is cheapest
+  const response = await fetchOpenAIResponse(
+    openai,
+    conversation,
+    selectedModel
+  );
   clearInterval(sendTypingInterval); // not typing after response
 
   if (!response) {
