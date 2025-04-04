@@ -13,7 +13,7 @@ import {
 } from "../core/messageMemory.js";
 import { hasAllowedRole } from "../core/permissions.js";
 import { sendTypingAnimation } from "../core/typing.js";
-import { getConfigValue } from "../db.js";
+import { getConfigValue, logUserTokenUsage } from "../db.js";
 
 const IGNORE_PREFIX = "!";
 
@@ -77,7 +77,20 @@ export async function onMessageCreate({
   }, 9000);
 
   // gets top 8 relevant chunks of info
-  const relevantChunks = await getRelevantChunksForMessage(message.content);
+  // Dynamically choose how many file chunks to include based on message length
+  const msgLength = message.content.trim().length;
+
+  let topK = 2;
+  if (msgLength > 150) topK = 4;
+  if (msgLength > 300) topK = 6;
+  if (msgLength > 500) topK = 8;
+
+  console.log(`📊 Message length: ${msgLength}, using topK: ${topK} chunks`);
+
+  const relevantChunks = await getRelevantChunksForMessage(
+    message.content,
+    topK
+  );
   // initial system prompt + the 8 relevant chunks of info
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
@@ -94,6 +107,16 @@ export async function onMessageCreate({
     conversation,
     selectedModel
   );
+
+  // Log tokens used (if available)
+  if (response?.usage?.total_tokens) {
+    await logUserTokenUsage(
+      message.author.id,
+      selectedModel,
+      response.usage.total_tokens
+    );
+  }
+
   clearInterval(sendTypingInterval); // not typing after response
 
   if (!response) {

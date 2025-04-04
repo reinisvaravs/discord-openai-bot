@@ -122,7 +122,7 @@ export async function loadAndEmbedKnowledge() {
 }
 
 // finds similar chunks of info to message
-export async function getRelevantChunksForMessage(message, topK = 13) {
+export async function getRelevantChunksForMessage(message, topK = 8) {
   const res = await openai.embeddings.create({
     input: message,
     model: "text-embedding-3-small",

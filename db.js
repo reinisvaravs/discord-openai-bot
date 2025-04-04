@@ -107,4 +107,12 @@ export async function setConfigValue(key, value) {
   );
 }
 
+export async function logUserTokenUsage(userId, model, tokens) {
+  await pool.query(
+    `INSERT INTO user_logs (user_id, model, tokens)
+     VALUES ($1, $2, $3)`,
+    [userId, model, tokens]
+  );
+}
+
 export default pool;

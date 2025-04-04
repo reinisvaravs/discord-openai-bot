@@ -1,6 +1,6 @@
 import pool from "../db.js";
 
-const MAX_HISTORY = 20; // how many messages to keep in memory per user
+const MAX_HISTORY = 5; // how many messages to keep in memory per user
 
 // Loads conversation history for a given user from DB
 // this is sent to gpt each req

@@ -1,5 +1,6 @@
 import express from "express";
 import { getFormattedHistory, resetHistory } from "../core/messageMemory.js";
+import pool from "../db.js";
 
 const router = express.Router();
 
@@ -26,6 +27,21 @@ router.post("/memory/:userId/reset", async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Failed to reset memory." });
+  }
+});
+
+router.get("/logs", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT user_id, model, tokens, created_at
+       FROM user_logs
+       ORDER BY created_at DESC
+       LIMIT 100`
+    );
+    res.json({ success: true, logs: result.rows });
+  } catch (err) {
+    console.error("Error fetching usage logs:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch logs" });
   }
 });
 
